@@ -3,7 +3,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from queue import PriorityQueue
 from gridNode import Node
-from colorPicker import ColorPicker
+from colorPicker import ColorPicker   #comment i made by tanisha
 
 # Constants
 WINDOW_WIDTH = 900
