@@ -34,4 +34,14 @@ class ColorPicker(QWidget):
             button = QPushButton()
             button.setStyleSheet(f"background-color: {self.colors[link].name()}; border: 1px solid black;")
             button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)  # Make buttons expand
-            button.clicked.connect(lambda _, c=se
+            button.clicked.connect(lambda _, c=self.colors[link]: self.set_selected_color(c))  # Connect button to color selection
+            self.layout.addWidget(button)
+
+    def set_selected_color(self, color):
+        """
+        Updates the selected color in the main application when a button is clicked.
+        
+        Parameters:
+        - color: The QColor object representing the selected color.
+        """
+        self.parent.selected_color = color
