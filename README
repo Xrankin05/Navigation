@@ -1,4 +1,5 @@
 Create workspace
+Install GIT if you haven't for vscode integration
 Pull code
 Create Venv (ctrl+shift+p, Python create environment, venv)
 Select venv (in terminal ./venv/Scripts/activate)
