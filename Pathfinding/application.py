@@ -8,7 +8,7 @@ from colorPicker import ColorPicker   #comment i made by tanisha
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
-ROWS, COLS = 50, 50  # Grid size
+ROWS, COLS = 800, 100  # Grid size
 GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
 GRID_HEIGHT = WINDOW_HEIGHT
 CELL_SIZE = GRID_WIDTH // COLS  # Adjusting size per cell
@@ -58,7 +58,7 @@ class MainWindow(QMainWindow):
         self.view.setFixedSize(GRID_WIDTH, GRID_HEIGHT)
 
         # Create Grid
-        self.grid = [[Node(row, col, CELL_SIZE, ROWS, self, 1) for col in range(COLS)] for row in range(ROWS)]
+        self.grid = [[Node(row, col, CELL_SIZE, ROWS, COLS, self, 1) for col in range(COLS)] for row in range(ROWS)]
         for row in self.grid:
             for cell in row:
                 self.scene.addItem(cell)

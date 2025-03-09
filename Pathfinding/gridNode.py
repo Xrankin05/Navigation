@@ -6,7 +6,7 @@ class Node(QGraphicsRectItem):
     Represents a single cell (node) in the grid.
     Each node can have different types (start, goal, barrier, etc.).
     """
-    def __init__(self, row, col, width, total_rows, parent, cost):
+    def __init__(self, row, col, width, total_rows, total_cols, parent, cost):
         super().__init__(0, 0, width, width)  # Initialize a square grid cell
         
         # Grid position and parent reference
@@ -14,6 +14,7 @@ class Node(QGraphicsRectItem):
         self.row = row  # Row index
         self.col = col  # Column index
         self.total_rows = total_rows  # Total number of rows in the grid
+        self.total_cols = total_cols  # Total number of cols in the grid
         
         # Set graphical properties
         self.setRect(col * width, row * width, width, width)  # Define cell position and size
@@ -63,7 +64,7 @@ class Node(QGraphicsRectItem):
             self.neighbors.append(grid[self.row - 1][self.col])
         
         # Check RIGHT (col + 1) if it's within bounds and not a barrier
-        if self.col < self.total_rows - 1 and grid[self.row][self.col + 1].type != 'barrier':
+        if self.col < self.total_cols - 1 and grid[self.row][self.col + 1].type != 'barrier':
             self.neighbors.append(grid[self.row][self.col + 1])
         
         # Check LEFT (col - 1) if it's within bounds and not a barrier
