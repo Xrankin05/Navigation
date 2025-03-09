@@ -83,8 +83,13 @@ class MainWindow(QMainWindow):
         self.run_button.clicked.connect(self.find_path)
         right_layout.addWidget(self.run_button)
 
-        # Reset Button
-        self.reset_button = QPushButton("Reset")
+        # Reset Visualizer Button
+        self.reset_button = QPushButton("Reset Visualizer")
+        self.reset_button.clicked.connect(self.real_color)
+        right_layout.addWidget(self.reset_button)
+
+        # Reset Board Button
+        self.reset_button = QPushButton("Reset Board")
         self.reset_button.clicked.connect(self.reset_grid)
         right_layout.addWidget(self.reset_button)
 

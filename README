@@ -2,4 +2,4 @@ Create workspace
 Pull code
 Create Venv (ctrl+shift+p, Python create environment, venv)
 Select venv (in terminal ./venv/Scripts/activate)
-Install required libraries
+Install required libraries (pip install PyQT5)
