@@ -110,9 +110,10 @@ class MainWindow(QMainWindow):
             return
         
         goal = goals[0]
+        # Initialize the priority queue for open set
         open_set = PriorityQueue()
         open_set.put((0, self.start))
-        came_from = {}
+        came_from = {} # Dictionary to keep track of the path
         g_score = {node: float("inf") for row in self.grid for node in row}
         g_score[self.start] = 0
         f_score = {node: float("inf") for row in self.grid for node in row}
