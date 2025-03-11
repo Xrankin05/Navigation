@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
         """Manhattan distance with slight bias for forward movement"""
         dx = abs(node2.col - node1.col)
         dy = abs(node2.row - node1.row)
-        return dx + dy + 0.1 * (node1.row - node2.row)  # Penalize backward movement slightly
+        return dx + dy
 
 
 
