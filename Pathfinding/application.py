@@ -124,61 +124,78 @@ class MainWindow(QMainWindow):
         print("Starting A* Pathfinding...")  # Debugging
         for row in self.grid:
             for node in row:
-                node.update_neighbors(self.grid) # Updates all nodes in the grid with their neighbors.
+                node.update_neighbors(self.grid)  # Updates all nodes in the grid with their neighbors.
 
         goals = self.goals[:]
         if not self.start or not goals:
-            print("No start or goal set!")  # Debugging
+            print("No start or goals set!")  # Debugging
             return
+
+        current_start = self.start
+        full_path = []  # List to store the full path across all goals
         
-        goal = goals[0]
-        # Initialize the priority queue for open set
-        open_set = PriorityQueue()
-        open_set.put((0, self.start))
-        came_from = {} # Dictionary to keep track of the path
-        closed_set = set()  # Set to track fully processed nodes
-        g_score = {node: float("inf") for row in self.grid for node in row}
-        g_score[self.start] = 0
-        f_score = {node: float("inf") for row in self.grid for node in row}
-        f_score[self.start] = self.heuristic(self.start, goal)
+        for goal in goals:
+            print(f"Finding path to goal at ({goal.row}, {goal.col})")  # Debugging
 
-        open_set_hash = {self.start}
-        
-        while not open_set.empty():
-            _, current = open_set.get()
-            open_set_hash.remove(current)
-            #print(f"Checking node: ({current.row}, {current.col})")  # Debugging
-            if current in closed_set:
-                continue
+            # Initialize the priority queue for open set
+            open_set = PriorityQueue()
+            open_set.put((0, current_start))
+            came_from = {}  # Dictionary to keep track of the path
+            closed_set = set()  # Set to track fully processed nodes
+            g_score = {node: float("inf") for row in self.grid for node in row}
+            g_score[current_start] = 0
+            f_score = {node: float("inf") for row in self.grid for node in row}
+            f_score[current_start] = self.heuristic(current_start, goal)
 
-            if current == goal:
-                print("Goal reached!")  # Debugging
-                self.reconstruct_path(came_from, current)
-                return
+            open_set_hash = {current_start}
 
-            for neighbor in current.neighbors:
-                temp_g_score = g_score[current] + neighbor.cost
+            while not open_set.empty():
+                _, current = open_set.get()
+                open_set_hash.remove(current)
 
-                if temp_g_score < g_score[neighbor]:
-                    came_from[neighbor] = current
-                    g_score[neighbor] = temp_g_score
-                    heuristic = self.heuristic(neighbor, goal)
-                    f_score[neighbor] = temp_g_score + heuristic
-                    neighbor.heuristic_to_goal = heuristic
-                    neighbor.f_score = f_score[neighbor]
-                    
-                    if neighbor not in open_set_hash:
-                        open_set.put((f_score[neighbor], neighbor))
-                        open_set_hash.add(neighbor)
-                        self.set_preview_color(neighbor, self.color_map['open'])
-                        #print(f"Neighbor ({neighbor.row}, {neighbor.col}) added to open set.")  # Debugging
-                        QApplication.processEvents()
-            closed_set.add(current)
-            self.set_preview_color(current, self.color_map['closed'])
-            QApplication.processEvents()
+                if current in closed_set:
+                    continue
 
-        print("No path found!")  # Debugging
-        self.real_color()
+                if current == goal:
+                    print(f"Goal at ({goal.row}, {goal.col}) reached!")  # Debugging
+                    segment_path = self.reconstruct_path(came_from, current)  # Get the segment path
+                    full_path.extend(segment_path)  # Append to full path
+                    current_start = goal  # Update the start for the next segment
+                    break  # Exit loop and move to the next goal
+
+                for neighbor in current.neighbors:
+                    temp_g_score = g_score[current] + neighbor.cost
+
+                    if temp_g_score < g_score[neighbor]:
+                        came_from[neighbor] = current
+                        g_score[neighbor] = temp_g_score
+                        heuristic = self.heuristic(neighbor, goal)
+                        f_score[neighbor] = temp_g_score + heuristic
+                        neighbor.heuristic_to_goal = heuristic
+                        neighbor.f_score = f_score[neighbor]
+
+                        if neighbor not in open_set_hash:
+                            open_set.put((f_score[neighbor], neighbor))
+                            open_set_hash.add(neighbor)
+                            self.set_preview_color(neighbor, self.color_map['open'])
+                            QApplication.processEvents()
+                
+                closed_set.add(current)
+                self.set_preview_color(current, self.color_map['closed'])
+                QApplication.processEvents()
+
+            else:
+                # If we exit the while loop without breaking, no path was found
+                print(f"No path found to goal at ({goal.row}, {goal.col})!")  # Debugging
+                self.real_color()
+                return  # Stop searching if one goal is unreachable
+
+        # After all goals are processed, reconstruct the entire path taken
+        print("Reconstructing full path through all goals...")  # Debugging
+        self.visualize_full_path(full_path)
+        print("All goals reached!")  # Debugging
+
+
 
 
     def heuristic(self, node1, node2):
@@ -190,16 +207,24 @@ class MainWindow(QMainWindow):
 
 
     def reconstruct_path(self, came_from, current):
-        """Reconstructs the path from goal to start"""
+        """Reconstructs the path from goal to start and returns it"""
+        path_segment = []
         while current in came_from:
             current = came_from[current]
             if current != self.start:
                 self.set_preview_color(current, self.color_map['path_point'])
-                QApplication.processEvents()  # <-- Forces UI update
+                QApplication.processEvents()  # Force UI update
+                path_segment.append(current)  # Store in path list
+        
+        path_segment.reverse()  # Reverse to get start -> goal order
+        return path_segment
 
-        #self.real_color()
 
-
+    def visualize_full_path(self, full_path):
+        """Visually reconstructs the entire path across all goals"""
+        for node in full_path:
+            self.set_preview_color(node, self.color_map['start'])
+            QApplication.processEvents()
 
     def set_preview_color(self, cell, color):
         cell.color = color
