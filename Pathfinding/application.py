@@ -6,6 +6,8 @@ from gridNode import Node
 from colorPicker import ColorPicker
 from gridFileManager import GridFileManager
 import os
+import math
+import heapq
 
 from pynput import mouse
 
@@ -134,6 +136,7 @@ class MainWindow(QMainWindow):
         open_set = PriorityQueue()
         open_set.put((0, self.start))
         came_from = {} # Dictionary to keep track of the path
+        closed_set = set()  # Set to track fully processed nodes
         g_score = {node: float("inf") for row in self.grid for node in row}
         g_score[self.start] = 0
         f_score = {node: float("inf") for row in self.grid for node in row}
@@ -144,7 +147,9 @@ class MainWindow(QMainWindow):
         while not open_set.empty():
             _, current = open_set.get()
             open_set_hash.remove(current)
-            print(f"Checking node: ({current.row}, {current.col})")  # Debugging
+            #print(f"Checking node: ({current.row}, {current.col})")  # Debugging
+            if current in closed_set:
+                continue
 
             if current == goal:
                 print("Goal reached!")  # Debugging
@@ -157,15 +162,18 @@ class MainWindow(QMainWindow):
                 if temp_g_score < g_score[neighbor]:
                     came_from[neighbor] = current
                     g_score[neighbor] = temp_g_score
-                    f_score[neighbor] = temp_g_score + self.heuristic(neighbor, goal)
+                    heuristic = self.heuristic(neighbor, goal)
+                    f_score[neighbor] = temp_g_score + heuristic
+                    neighbor.heuristic_to_goal = heuristic
+                    neighbor.f_score = f_score[neighbor]
                     
                     if neighbor not in open_set_hash:
                         open_set.put((f_score[neighbor], neighbor))
                         open_set_hash.add(neighbor)
                         self.set_preview_color(neighbor, self.color_map['open'])
-                        print(f"Neighbor ({neighbor.row}, {neighbor.col}) added to open set.")  # Debugging
+                        #print(f"Neighbor ({neighbor.row}, {neighbor.col}) added to open set.")  # Debugging
                         QApplication.processEvents()
-            
+            closed_set.add(current)
             self.set_preview_color(current, self.color_map['closed'])
             QApplication.processEvents()
 
@@ -174,8 +182,12 @@ class MainWindow(QMainWindow):
 
 
     def heuristic(self, node1, node2):
-        """Heuristic function for A* (Manhattan distance)"""
-        return abs(node1.row - node2.row) + abs(node1.col - node2.col)
+        """Manhattan distance with slight bias for forward movement"""
+        dx = abs(node2.col - node1.col)
+        dy = abs(node2.row - node1.row)
+        return dx + dy + 0.1 * (node1.row - node2.row)  # Penalize backward movement slightly
+
+
 
     def reconstruct_path(self, came_from, current):
         """Reconstructs the path from goal to start"""

@@ -15,6 +15,8 @@ class Node(QGraphicsRectItem):
         self.col = col  # Column index
         self.total_rows = total_rows  # Total number of rows in the grid
         self.total_cols = total_cols  # Total number of cols in the grid
+        self.heuristic_to_goal = float("inf")
+        self.f_score = float("inf")
 
         self.setAcceptHoverEvents(True)  # Enable hover events
         self.setAcceptedMouseButtons(Qt.LeftButton)  # Accept left clicks
@@ -39,10 +41,13 @@ class Node(QGraphicsRectItem):
 
     def __lt__(self, other):
         """
-        Comparison method needed for priority queue in pathfinding.
-        Currently, all nodes are considered equal.
+        Tiebreaker for nodes with equal f_score.
+        Prioritizes nodes closer to the goal.
         """
-        return False  # Placeholder; modify if priority-based sorting is needed
+        if self.f_score == other.f_score:
+            # Prefer nodes closer to the goal (heuristic acts as a secondary sorting criteria)
+            return self.heuristic_to_goal < other.heuristic_to_goal  
+        return False  # Otherwise, priority queue will use f_score by default
 
     def reset(self):
         """
