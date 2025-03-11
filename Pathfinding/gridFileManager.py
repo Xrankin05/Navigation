@@ -45,7 +45,7 @@ class GridFileManager:
         with open(file_path, 'w', newline='') as file:
             writer = csv.writer(file)
             for row in self.parent.grid:
-                writer.writerow([node.type for node in row])
+                writer.writerow([f'{node.type}:{node.cost}:{node.accessible}' for node in row]) # EDIT THESE FOR EXPORTING/IMPORTING
         print(f"Grid exported to {file_path}")
         self.update_file_list()
 
@@ -61,7 +61,12 @@ class GridFileManager:
         with open(file_path, 'r') as file:
             reader = csv.reader(file)
             for row_idx, row in enumerate(reader):
-                for col_idx, node_type in enumerate(row):
-                    self.parent.grid[row_idx][col_idx].type = node_type
-                    self.parent.grid[row_idx][col_idx].updateColor()
+                for col_idx, values in enumerate(row):
+                    node = values.split(":") # EDIT THESE BELOW TO ASSIGN NODE WITH VALUES FROM CSV
+                    self.parent.grid[row_idx][col_idx].type = node[0]
+                    self.parent.grid[row_idx][col_idx].color = self.parent.color_map[node[0]]
+                    self.parent.grid[row_idx][col_idx].cost = node[1]
+                    self.parent.grid[row_idx][col_idx].accessible = node[2]
+                    self.parent.grid[row_idx][col_idx].updateColor() # UPDATE COLOR BREAKS IT, BUT NEED TO FIGURE OUT HOW TO UPDATE PARENTS START AND GOAL NODES SOMEWHERE
+        self.parent.real_color()
         print(f"Grid imported from {file_path}")

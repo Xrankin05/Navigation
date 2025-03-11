@@ -114,6 +114,10 @@ class Node(QGraphicsRectItem):
             self.currColor = self.parent.selected_color
             self.type = 'barrier'  # Mark as an obstacle
         
+        elif self.parent.selected_color == self.parent.color_map['reset']:
+            self.currColor = self.parent.selected_color
+            self.type = 'reset'  # Mark as empty
+        
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)
 
