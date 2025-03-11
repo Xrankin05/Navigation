@@ -28,6 +28,7 @@ class Node(QGraphicsRectItem):
         
         # Allow selection for user interaction
         self.setFlag(QGraphicsRectItem.ItemIsSelectable, True)
+        self.setAcceptHoverEvents(True)  # Enable hover events
         
         # Cost (used in pathfinding algorithms like A*)
         self.cost = cost  # Cost to move into this node (for weighted pathfinding)
@@ -71,10 +72,8 @@ class Node(QGraphicsRectItem):
         if self.col > 0 and grid[self.row][self.col - 1].type != 'barrier':
             self.neighbors.append(grid[self.row][self.col - 1])
 
-    def mousePressEvent(self, event):
-        """
-        Handles mouse click events to change the node's type and color.
-        """
+
+    def updateColor(self):
         currType = self.type  # Store current type
         
         # Ensure start node is unique; do not allow multiple starts
@@ -106,3 +105,15 @@ class Node(QGraphicsRectItem):
         
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)
+
+    def mousePressEvent(self, event):
+        self.updateColor()
+
+    def mouseMoveEvent(self, event):
+        """Triggers when the mouse moves while the left button is held down."""
+        if self.parent.isLeftClicking:  # Ensure left click is held
+            self.updateColor()
+            event.accept()  # Accept the event to ensure propagation
+        else:
+            event.ignore()  # Ignore if the condition isn't met
+        super().mouseMoveEvent(event)

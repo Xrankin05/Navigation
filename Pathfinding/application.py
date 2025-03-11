@@ -5,6 +5,8 @@ from queue import PriorityQueue
 from gridNode import Node
 from colorPicker import ColorPicker   #comment i made by tanisha
 
+from pynput import mouse
+
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
@@ -44,6 +46,13 @@ class MainWindow(QMainWindow):
         self.color_map = color_map
         self.start = None
         self.goals = []
+
+        self.isLeftClicking = False  # Track mouse clicks
+
+        # Start mouse listener in a background thread
+        self.mouse_listener = mouse.Listener(on_click=self.on_click)
+        self.mouse_listener.daemon = True  # Allows the thread to close when the program exits
+        self.mouse_listener.start()
 
         # Main widget and layout
         main_widget = QWidget()
@@ -187,6 +196,11 @@ class MainWindow(QMainWindow):
         self.start = None
         self.goals = []
         print("Grid reset.")  # Debugging output
+
+
+    def on_click(self, x, y, button, pressed):
+        self.isLeftClicking = pressed
+
 
 if __name__ == "__main__":
     app = QApplication([])
