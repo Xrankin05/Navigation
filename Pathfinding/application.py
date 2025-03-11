@@ -64,6 +64,7 @@ class MainWindow(QMainWindow):
         # === GRID SECTION (LEFT 2/3) ===
         self.scene = QGraphicsScene(0, 0, GRID_WIDTH, GRID_HEIGHT)
         self.view = QGraphicsView(self.scene)
+        self.view.setMouseTracking(True)  # Enables movement tracking even without clicks
         self.view.setFixedSize(GRID_WIDTH, GRID_HEIGHT)
 
         # Create Grid

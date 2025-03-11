@@ -15,6 +15,9 @@ class Node(QGraphicsRectItem):
         self.col = col  # Column index
         self.total_rows = total_rows  # Total number of rows in the grid
         self.total_cols = total_cols  # Total number of cols in the grid
+
+        self.setAcceptHoverEvents(True)  # Enable hover events
+        self.setAcceptedMouseButtons(Qt.LeftButton)  # Accept left clicks
         
         # Set graphical properties
         self.setRect(col * width, row * width, width, width)  # Define cell position and size
@@ -112,8 +115,16 @@ class Node(QGraphicsRectItem):
     def mouseMoveEvent(self, event):
         """Triggers when the mouse moves while the left button is held down."""
         if self.parent.isLeftClicking:  # Ensure left click is held
-            self.updateColor()
-            event.accept()  # Accept the event to ensure propagation
+            scene_pos = event.scenePos()  # Get position in scene coordinates
+            items_under_cursor = self.scene().items(scene_pos)  # Get items at cursor
+
+            for item in items_under_cursor:
+                if isinstance(item, Node):  # Ensure it's a Node
+                    item.updateColor()
+                    break  # Avoid multiple updates
+
+            event.accept()  # Accept event to stop further processing
         else:
             event.ignore()  # Ignore if the condition isn't met
+
         super().mouseMoveEvent(event)
