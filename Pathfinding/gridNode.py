@@ -124,8 +124,14 @@ class Node(QGraphicsRectItem):
 
     def mousePressEvent(self, event: QMouseEvent):
         """Start panning with right mouse button"""
-        if event.button() == Qt.RightButton:
+        if event.button() == Qt.LeftButton:
+            self.parent.isLeftClicking = True
             self.updateColor()
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        """Start panning with right mouse button"""
+        if event.button() == Qt.LeftButton:
+            self.parent.isLeftClicking = False
 
     def mouseMoveEvent(self, event):
         """Triggers when the mouse moves while the left button is held down."""
