@@ -89,7 +89,10 @@ class Node(QGraphicsRectItem):
         
         # If the clicked node is a goal, remove it from the goal list
         elif currType == 'goal':
-            self.parent.goals.remove(self)
+            try:
+                self.parent.goals.remove(self)
+            except:
+                pass
         
         # Assign new node type based on the selected color
         if self.parent.selected_color == self.parent.color_map['start']:

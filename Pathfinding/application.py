@@ -3,7 +3,9 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from queue import PriorityQueue
 from gridNode import Node
-from colorPicker import ColorPicker   #comment i made by tanisha
+from colorPicker import ColorPicker
+from gridFileManager import GridFileManager
+import os
 
 from pynput import mouse
 
@@ -36,6 +38,8 @@ color_map = {
     "open": GREEN
 }
 
+print(os.getcwd())
+
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -46,7 +50,7 @@ class MainWindow(QMainWindow):
         self.color_map = color_map
         self.start = None
         self.goals = []
-
+        self.savedGridsPath = 'Navigation/Pathfinding/Grids/'
         self.isLeftClicking = False  # Track mouse clicks
 
         # Start mouse listener in a background thread
@@ -80,6 +84,12 @@ class MainWindow(QMainWindow):
         # Color Picker
         self.color_picker = ColorPicker(color_map, self)
         right_layout.addWidget(self.color_picker)
+
+        self.gridFileManager = GridFileManager(self, self.savedGridsPath)
+        layout_widget = QWidget()
+        layout_widget.setLayout(self.gridFileManager.layout)
+        right_layout.addWidget(layout_widget)
+
 
         # Add Replay Time Label and Text Box
         self.replay_time_label = QLabel("Replay Time (ms):")
