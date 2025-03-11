@@ -5,6 +5,7 @@ from queue import PriorityQueue
 from gridNode import Node
 from colorPicker import ColorPicker
 from gridFileManager import GridFileManager
+from gridView import GridView
 import os
 import math
 import heapq
@@ -14,7 +15,7 @@ from pynput import mouse
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
-ROWS, COLS = 800, 100  # Grid size
+ROWS, COLS = 600, 100  # Grid size
 GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
 GRID_HEIGHT = WINDOW_HEIGHT
 CELL_SIZE = GRID_WIDTH // COLS  # Adjusting size per cell
@@ -40,8 +41,6 @@ color_map = {
     "open": GREEN
 }
 
-print(os.getcwd())
-
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -55,23 +54,21 @@ class MainWindow(QMainWindow):
         self.savedGridsPath = 'Navigation/Pathfinding/Grids/'
         self.isLeftClicking = False  # Track mouse clicks
 
-        # Start mouse listener in a background thread
-        self.mouse_listener = mouse.Listener(on_click=self.on_click)
-        self.mouse_listener.daemon = True  # Allows the thread to close when the program exits
-        self.mouse_listener.start()
-
         # Main widget and layout
         main_widget = QWidget()
-        main_layout = QSplitter(Qt.Horizontal)  # Splitter for left and right sections
+        main_layout = QSplitter(Qt.Horizontal)  # Splitter for left and ri ght sections
         main_widget.setLayout(QVBoxLayout())
         main_widget.layout().addWidget(main_layout)
         self.setCentralWidget(main_widget)
 
         # === GRID SECTION (LEFT 2/3) ===
-        self.scene = QGraphicsScene(0, 0, GRID_WIDTH, GRID_HEIGHT)
-        self.view = QGraphicsView(self.scene)
-        self.view.setMouseTracking(True)  # Enables movement tracking even without clicks
-        self.view.setFixedSize(GRID_WIDTH, GRID_HEIGHT)
+        self.scene = QGraphicsScene()
+        self.view = GridView(self.scene)  # Use the modified GridView class
+        self.view.setMouseTracking(True)  # Enables movement tracking
+
+        # Set minimum size so the grid isn't locked
+        self.view.setMinimumSize(600, 400)
+        
 
         # Create Grid
         self.grid = [[Node(row, col, CELL_SIZE, ROWS, COLS, self, 1) for col in range(COLS)] for row in range(ROWS)]
@@ -244,10 +241,6 @@ class MainWindow(QMainWindow):
         self.start = None
         self.goals = []
         print("Grid reset.")  # Debugging output
-
-
-    def on_click(self, x, y, button, pressed):
-        self.isLeftClicking = pressed
 
 
 if __name__ == "__main__":

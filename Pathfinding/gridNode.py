@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsRectItem  # Import for grid cell representation
 from PyQt5.QtCore import Qt  # Import for event handling
+from PyQt5.QtGui import *
 
 class Node(QGraphicsRectItem):
     """
@@ -121,8 +122,10 @@ class Node(QGraphicsRectItem):
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)
 
-    def mousePressEvent(self, event):
-        self.updateColor()
+    def mousePressEvent(self, event: QMouseEvent):
+        """Start panning with right mouse button"""
+        if event.button() == Qt.RightButton:
+            self.updateColor()
 
     def mouseMoveEvent(self, event):
         """Triggers when the mouse moves while the left button is held down."""
