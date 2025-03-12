@@ -26,7 +26,7 @@ class Node(QGraphicsRectItem):
         self.setRect(col * width, row * width, width, width)  # Define cell position and size
         self.color = self.parent.color_map['reset']  # Default color
         self.setBrush(self.color)  # Set initial color fill
-        
+
         # Pathfinding properties
         self.neighbors = []  # List to store accessible neighboring nodes
         self.width = width  # Width of each cell

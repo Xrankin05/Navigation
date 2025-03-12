@@ -68,7 +68,7 @@ class GridFileManager:
                     self.parent.grid[row_idx][col_idx].color = self.parent.color_map[node[0]]
                     self.parent.grid[row_idx][col_idx].cost = node[1]
                     self.parent.grid[row_idx][col_idx].accessible = node[2]
-                    self.parent.grid[row_idx][col_idx].updateColor() # UPDATE COLOR BREAKS IT, BUT NEED TO FIGURE OUT HOW TO UPDATE PARENTS START AND GOAL NODES SOMEWHERE
+                    #self.parent.grid[row_idx][col_idx].updateColor() # UPDATE COLOR BREAKS IT, BUT NEED TO FIGURE OUT HOW TO UPDATE PARENTS START AND GOAL NODES SOMEWHERE
         self.parent.real_color()
         print(f"Grid imported from {file_path}")
 
@@ -89,7 +89,6 @@ class GridFileManager:
                     for col_idx, value in enumerate(row):
                         value = eval(value)
                         color = QColor(value[0], value[1], value[2]) # R int G int B int values
-                        print(f'{row_idx}, {col_idx}')
                         self.parent.grid[row_idx][col_idx].type = 'reset'
                         self.parent.grid[row_idx][col_idx].color = color
                         self.parent.grid[row_idx][col_idx].cost = 1

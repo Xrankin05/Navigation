@@ -1,13 +1,14 @@
-import sys
 import os
 import csv
 from PIL import Image
 import math
+import tkinter as tk
+from tkinter import filedialog
 
 # Constants
-PIXEL_PER_WIDTH = 5  # Width of each grid cell
-PIXEL_PER_HEIGHT = 5  # Height of each grid cell
-OUTPUT_DIR = "Grids/"
+PIXEL_PER_WIDTH = 2  # Width of each grid cell
+PIXEL_PER_HEIGHT = 2  # Height of each grid cell
+OUTPUT_DIR = "Pathfinding/Grids/"
 
 # Hardcoded color palette
 color_map = {
@@ -35,8 +36,9 @@ def process_image(image_path):
 
     os.makedirs(OUTPUT_DIR, exist_ok=True)
     output_csv = os.path.join(OUTPUT_DIR, os.path.basename(image_path).rsplit(".", 1)[0] + ".csv")
-    print(f'Grid Width: {grid_width}')
-    print(f'Grid Height: {grid_height}')
+    print(f'Grid Cols or Width: {grid_width}')
+    print(f'Grid Rows or Height: {grid_height}')
+    
     with open(output_csv, "w", newline="") as csvfile:
         writer = csv.writer(csvfile)
         
@@ -55,7 +57,11 @@ def process_image(image_path):
     print(f"Grid saved to {output_csv}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: python script.py <image_path>")
-        sys.exit(1)
-    process_image(sys.argv[1])
+    root = tk.Tk()
+    root.withdraw()  # Hide the main Tkinter window
+    file_path = filedialog.askopenfilename(title="Select an Image", filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.bmp;*.gif")])
+    
+    if file_path:
+        process_image(file_path)
+    else:
+        print("No file selected.")

@@ -1,13 +1,13 @@
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene
 from PyQt5.QtCore import Qt, QPointF
-from PyQt5.QtGui import QWheelEvent, QMouseEvent, QPainter
+from PyQt5.QtGui import QWheelEvent, QMouseEvent, QPainter, QColor
 
 
 class GridView(QGraphicsView):
 	def __init__(self, scene: QGraphicsScene):
 		super().__init__(scene)
-		self.setRenderHint(QPainter.Antialiasing)
-		self.setRenderHint(QPainter.SmoothPixmapTransform)
+		self.setRenderHint(QPainter.Antialiasing, True)
+		self.setRenderHint(QPainter.SmoothPixmapTransform, True)
 		# Disable scrollbars entirely
 		self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 		self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -17,6 +17,8 @@ class GridView(QGraphicsView):
 		self.setResizeAnchor(QGraphicsView.NoAnchor)
 		self.setDragMode(QGraphicsView.NoDrag)
 		self.setInteractive(True)  # Ensures items receive events
+		self.setBackgroundBrush(QColor(255, 255, 255))  # Explicitly set background to white
+
 
 		# Track panning state
 		self.last_mouse_pos = None

@@ -15,10 +15,10 @@ from pynput import mouse
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
-ROWS, COLS = 138, 114  # Grid size USED TO BE 600 100
+ROWS, COLS = 345, 285  # Grid size USED TO BE 600 100
 GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
 GRID_HEIGHT = WINDOW_HEIGHT
-CELL_SIZE = GRID_WIDTH // COLS  # Adjusting size per cell
+CELL_SIZE = 10  # Adjusting size per cell
 
 # Colors
 BLUE = QColor(0, 0, 255)
@@ -234,6 +234,7 @@ class MainWindow(QMainWindow):
                 cell.setBrush(cell.color)
     
     def fake_color(self):
+        print("Fake Color Called")
         for row in self.grid:
             for cell in row:
                 cell.setBrush(cell.color)
