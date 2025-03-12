@@ -41,7 +41,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("PyQt5 Grid with Pathfinding")
         self.setGeometry(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.selected_color = QColor(0, 0, 0), # BLACK  # Default color
+        self.selected_color = color_map["barrier"] # BLACK  # Default color
         self.color_map = color_map
         self.start = None
         self.goals = []
