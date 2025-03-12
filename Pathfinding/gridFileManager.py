@@ -19,15 +19,20 @@ class GridFileManager:
         self.export_button = QPushButton("Export")
         self.export_button.clicked.connect(self.export_grid)
 
-        # Import Button
-        self.import_button = QPushButton("Import")
-        self.import_button.clicked.connect(self.import_color) # TEMPORARILY CHANGING THIS OFF OF IMPORT_GRID TO TEST IMPORT_COLOR
+        # Import Grid Button
+        self.import_grid_button = QPushButton("Import from Grid")
+        self.import_grid_button.clicked.connect(self.import_grid)
+
+        # Import From Exported Color JPG Button
+        self.import_color_button = QPushButton("Import from Color")
+        self.import_color_button.clicked.connect(self.import_color)
 
         # Layout Setup
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.file_selector)
         self.layout.addWidget(self.export_button)
-        self.layout.addWidget(self.import_button)
+        self.layout.addWidget(self.import_grid_button)
+        self.layout.addWidget(self.import_color_button)
         #parent.main_layout.addLayout(self.layout)
 
     def update_file_list(self):
