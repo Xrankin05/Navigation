@@ -5,7 +5,9 @@ import os
 # Define the scope
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 
-# Load credentials from environment variable
+# Load credentials from environment variable 
+# Set GOOGLE_CREDENTIALS enviromnental variable to the your cloud credential key
+# Via the linux command " $env:GOOGLE_CREDENTIALS="C:\Path\To\Program\Folder\yourkey.json
 creds_path = os.getenv("GOOGLE_CREDENTIALS")
 if not creds_path or not os.path.exists(creds_path):
     raise FileNotFoundError("Please set the GOOGLE_CREDENTIALS environment variable to the path of your credentials.json file.")
