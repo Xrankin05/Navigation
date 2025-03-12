@@ -5,10 +5,11 @@ import os
 import csv
 
 class GridFileManager:
+
     def __init__(self, parent, folder_path):
         self.parent = parent  # Reference to the main application
         self.folder_path = folder_path  # Folder to scan for CSV files
-        
+        self.flipped = self.flip_dict(parent.color_map)
         # Dropdown/Typing Box
         self.file_selector = QComboBox()
         self.file_selector.setEditable(True)  # Allows typing custom file names
@@ -89,9 +90,20 @@ class GridFileManager:
                     for col_idx, value in enumerate(row):
                         value = eval(value)
                         color = QColor(value[0], value[1], value[2]) # R int G int B int values
-                        self.parent.grid[row_idx][col_idx].type = 'reset'
+                        self.parent.grid[row_idx][col_idx].type = self.flipped[(color.red(), color.green(), color.blue())]
                         self.parent.grid[row_idx][col_idx].color = color
                         self.parent.grid[row_idx][col_idx].cost = 1
                         self.parent.grid[row_idx][col_idx].accessible = 1
-            self.parent.fake_color()
+            self.parent.real_color()
             print(f"Grid imported from {file_path}")
+
+
+    def flip_dict(self, d):
+        """
+        Flips the keys and values of a dictionary.
+        If multiple keys have the same value, only one will be kept in the flipped dictionary.
+        
+        :param d: Dictionary to flip
+        :return: Flipped dictionary
+        """
+        return { (v.red(), v.green(), v.blue()): k for k, v in d.items() }

@@ -18,6 +18,7 @@ class Node(QGraphicsRectItem):
         self.total_cols = total_cols  # Total number of cols in the grid
         self.heuristic_to_goal = float("inf")
         self.f_score = float("inf")
+        self.traversable = ["reset", "goal", "reset1", "reset2", "reset3"]
 
         self.setAcceptHoverEvents(True)  # Enable hover events
         self.setAcceptedMouseButtons(Qt.LeftButton)  # Accept left clicks
@@ -66,19 +67,19 @@ class Node(QGraphicsRectItem):
         self.neighbors = []
         
         # Check DOWN (row + 1) if it's within bounds and not a barrier
-        if self.row < self.total_rows - 1 and grid[self.row + 1][self.col].type != 'barrier':
+        if self.row < self.total_rows - 1 and grid[self.row + 1][self.col].type in self.traversable:
             self.neighbors.append(grid[self.row + 1][self.col])
         
         # Check UP (row - 1) if it's within bounds and not a barrier
-        if self.row > 0 and grid[self.row - 1][self.col].type != 'barrier':
+        if self.row > 0 and grid[self.row - 1][self.col].type in self.traversable:
             self.neighbors.append(grid[self.row - 1][self.col])
         
         # Check RIGHT (col + 1) if it's within bounds and not a barrier
-        if self.col < self.total_cols - 1 and grid[self.row][self.col + 1].type != 'barrier':
+        if self.col < self.total_cols - 1 and grid[self.row][self.col + 1].type in self.traversable:
             self.neighbors.append(grid[self.row][self.col + 1])
         
         # Check LEFT (col - 1) if it's within bounds and not a barrier
-        if self.col > 0 and grid[self.row][self.col - 1].type != 'barrier':
+        if self.col > 0 and grid[self.row][self.col - 1].type in self.traversable:
             self.neighbors.append(grid[self.row][self.col - 1])
 
 
@@ -115,7 +116,10 @@ class Node(QGraphicsRectItem):
             self.currColor = self.parent.selected_color
             self.type = 'barrier'  # Mark as an obstacle
         
-        elif self.parent.selected_color == self.parent.color_map['reset']:
+        elif self.parent.selected_color == self.parent.color_map['reset'] \
+        or self.parent.selected_color == self.parent.color_map['reset2'] \
+        or self.parent.selected_color == self.parent.color_map['reset3'] \
+        or self.parent.selected_color == self.parent.color_map['reset3']:
             self.currColor = self.parent.selected_color
             self.type = 'reset'  # Mark as empty
         

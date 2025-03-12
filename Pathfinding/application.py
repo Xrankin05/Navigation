@@ -21,25 +21,19 @@ GRID_HEIGHT = WINDOW_HEIGHT
 CELL_SIZE = 10  # Adjusting size per cell
 
 # Colors
-BLUE = QColor(0, 0, 255)
-RED = QColor(255, 0, 0)
-GREEN = QColor(0, 255, 0)
-YELLOW = QColor(255, 255, 0)
-PURPLE = QColor(128, 0, 128)
-ORANGE = QColor(255, 165, 0)
-PINK = QColor(255, 192, 203)
-BLACK = QColor(0, 0, 0)
-WHITE = QColor(255, 255, 255)
-
 color_map = {
-    "start": BLUE,
-    "goal": PINK,
-    "path_point": YELLOW,
-    "barrier": BLACK,
-    "reset": WHITE,
-    "closed": RED,
-    "open": GREEN
+    "closed": QColor(171, 211, 223), # BLUE
+    "reset2": QColor(233, 151, 163), # RED
+    "reset3": QColor(245, 244, 198), # YELLOW
+    "path_point": QColor(198, 193, 189), # GREY
+    "goal": QColor(128, 0, 128), # PURPLE
+    "reset": QColor(255, 183, 156), # ORANGE
+    "start": QColor(255, 192, 203), # PINK
+    "barrier": QColor(0, 0, 0), # BLACK
+    "reset1": QColor(255, 255, 255), # WHITE
+    "open": QColor(0, 255, 0) # GREEN
 }
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -47,7 +41,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("PyQt5 Grid with Pathfinding")
         self.setGeometry(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.selected_color = BLACK  # Default color
+        self.selected_color = QColor(0, 0, 0), # BLACK  # Default color
         self.color_map = color_map
         self.start = None
         self.goals = []
