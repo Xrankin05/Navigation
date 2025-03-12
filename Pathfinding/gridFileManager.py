@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import os
 import csv
 
@@ -19,7 +20,7 @@ class GridFileManager:
 
         # Import Button
         self.import_button = QPushButton("Import")
-        self.import_button.clicked.connect(self.import_grid)
+        self.import_button.clicked.connect(self.import_color) # TEMPORARILY CHANGING THIS OFF OF IMPORT_GRID TO TEST IMPORT_COLOR
 
         # Layout Setup
         self.layout = QVBoxLayout()
@@ -70,3 +71,28 @@ class GridFileManager:
                     self.parent.grid[row_idx][col_idx].updateColor() # UPDATE COLOR BREAKS IT, BUT NEED TO FIGURE OUT HOW TO UPDATE PARENTS START AND GOAL NODES SOMEWHERE
         self.parent.real_color()
         print(f"Grid imported from {file_path}")
+
+
+    def import_color(self):
+            """Loads a grid state from a selected CSV file."""
+            file_name = self.file_selector.currentText().strip()
+            file_path = os.path.join(self.folder_path, file_name)
+            print(os.getcwd())
+            print (file_path)
+            if not os.path.exists(file_path):
+                print("File not found!")
+                return
+            
+            with open(file_path, 'r') as file:
+                reader = csv.reader(file)
+                for row_idx, row in enumerate(reader):
+                    for col_idx, value in enumerate(row):
+                        value = eval(value)
+                        color = QColor(value[0], value[1], value[2]) # R int G int B int values
+                        print(f'{row_idx}, {col_idx}')
+                        self.parent.grid[row_idx][col_idx].type = 'reset'
+                        self.parent.grid[row_idx][col_idx].color = color
+                        self.parent.grid[row_idx][col_idx].cost = 1
+                        self.parent.grid[row_idx][col_idx].accessible = 1
+            self.parent.fake_color()
+            print(f"Grid imported from {file_path}")

@@ -15,7 +15,7 @@ from pynput import mouse
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
-ROWS, COLS = 600, 100  # Grid size
+ROWS, COLS = 138, 114  # Grid size USED TO BE 600 100
 GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
 GRID_HEIGHT = WINDOW_HEIGHT
 CELL_SIZE = GRID_WIDTH // COLS  # Adjusting size per cell
@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
         self.color_map = color_map
         self.start = None
         self.goals = []
-        self.savedGridsPath = 'Navigation/Pathfinding/Grids/'
+        self.savedGridsPath = 'Pathfinding/Grids/'
         self.isLeftClicking = False  # Track mouse clicks
 
         # Main widget and layout
@@ -231,6 +231,11 @@ class MainWindow(QMainWindow):
         for row in self.grid:
             for cell in row:
                 cell.color = color_map[cell.type]
+                cell.setBrush(cell.color)
+    
+    def fake_color(self):
+        for row in self.grid:
+            for cell in row:
                 cell.setBrush(cell.color)
 
     def reset_grid(self):
