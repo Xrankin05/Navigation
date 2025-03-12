@@ -1,6 +1,7 @@
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 import os
+import pandas as pd
 
 # Define the scope
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
@@ -19,4 +20,6 @@ client = gspread.authorize(creds)
 sheet = client.open_by_key("1idOzW4T52Sr69Eazpn_BMcNQFvLTeBYo4Nj258uFZMU").sheet1
 # Get and print all data
 data = sheet.get_all_records()
-print(data)
+# Put the data into a dataFrame for easier manipulation.
+dataFrame = pd.DataFrame(data)
+print(dataFrame)
