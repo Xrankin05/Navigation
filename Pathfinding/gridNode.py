@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QGraphicsRectItem  # Import for grid cell representation
 from PyQt5.QtCore import Qt  # Import for event handling
+from PyQt5.QtGui import *
 
 class Node(QGraphicsRectItem):
     """
@@ -15,12 +16,18 @@ class Node(QGraphicsRectItem):
         self.col = col  # Column index
         self.total_rows = total_rows  # Total number of rows in the grid
         self.total_cols = total_cols  # Total number of cols in the grid
+        self.heuristic_to_goal = float("inf")
+        self.f_score = float("inf")
+        self.traversable = ["reset", "goal", "reset1", "reset2", "reset3"]
+
+        self.setAcceptHoverEvents(True)  # Enable hover events
+        self.setAcceptedMouseButtons(Qt.LeftButton)  # Accept left clicks
         
         # Set graphical properties
         self.setRect(col * width, row * width, width, width)  # Define cell position and size
         self.color = self.parent.color_map['reset']  # Default color
         self.setBrush(self.color)  # Set initial color fill
-        
+
         # Pathfinding properties
         self.neighbors = []  # List to store accessible neighboring nodes
         self.width = width  # Width of each cell
@@ -36,10 +43,13 @@ class Node(QGraphicsRectItem):
 
     def __lt__(self, other):
         """
-        Comparison method needed for priority queue in pathfinding.
-        Currently, all nodes are considered equal.
+        Tiebreaker for nodes with equal f_score.
+        Prioritizes nodes closer to the goal.
         """
-        return False  # Placeholder; modify if priority-based sorting is needed
+        if self.f_score == other.f_score:
+            # Prefer nodes closer to the goal (heuristic acts as a secondary sorting criteria)
+            return self.heuristic_to_goal < other.heuristic_to_goal  
+        return False  # Otherwise, priority queue will use f_score by default
 
     def reset(self):
         """
@@ -57,19 +67,19 @@ class Node(QGraphicsRectItem):
         self.neighbors = []
         
         # Check DOWN (row + 1) if it's within bounds and not a barrier
-        if self.row < self.total_rows - 1 and grid[self.row + 1][self.col].type != 'barrier':
+        if self.row < self.total_rows - 1 and grid[self.row + 1][self.col].type in self.traversable:
             self.neighbors.append(grid[self.row + 1][self.col])
         
         # Check UP (row - 1) if it's within bounds and not a barrier
-        if self.row > 0 and grid[self.row - 1][self.col].type != 'barrier':
+        if self.row > 0 and grid[self.row - 1][self.col].type in self.traversable:
             self.neighbors.append(grid[self.row - 1][self.col])
         
         # Check RIGHT (col + 1) if it's within bounds and not a barrier
-        if self.col < self.total_cols - 1 and grid[self.row][self.col + 1].type != 'barrier':
+        if self.col < self.total_cols - 1 and grid[self.row][self.col + 1].type in self.traversable:
             self.neighbors.append(grid[self.row][self.col + 1])
         
         # Check LEFT (col - 1) if it's within bounds and not a barrier
-        if self.col > 0 and grid[self.row][self.col - 1].type != 'barrier':
+        if self.col > 0 and grid[self.row][self.col - 1].type in self.traversable:
             self.neighbors.append(grid[self.row][self.col - 1])
 
 
@@ -86,7 +96,10 @@ class Node(QGraphicsRectItem):
         
         # If the clicked node is a goal, remove it from the goal list
         elif currType == 'goal':
-            self.parent.goals.remove(self)
+            try:
+                self.parent.goals.remove(self)
+            except:
+                pass
         
         # Assign new node type based on the selected color
         if self.parent.selected_color == self.parent.color_map['start']:
@@ -103,17 +116,40 @@ class Node(QGraphicsRectItem):
             self.currColor = self.parent.selected_color
             self.type = 'barrier'  # Mark as an obstacle
         
+        elif self.parent.selected_color == self.parent.color_map['reset'] \
+        or self.parent.selected_color == self.parent.color_map['reset2'] \
+        or self.parent.selected_color == self.parent.color_map['reset3'] \
+        or self.parent.selected_color == self.parent.color_map['reset3']:
+            self.currColor = self.parent.selected_color
+            self.type = 'reset'  # Mark as empty
+        
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)
 
-    def mousePressEvent(self, event):
-        self.updateColor()
+    def mousePressEvent(self, event: QMouseEvent):
+        """Start panning with right mouse button"""
+        if event.button() == Qt.LeftButton:
+            self.parent.isLeftClicking = True
+            self.updateColor()
+
+    def mouseReleaseEvent(self, event: QMouseEvent):
+        """Start panning with right mouse button"""
+        if event.button() == Qt.LeftButton:
+            self.parent.isLeftClicking = False
 
     def mouseMoveEvent(self, event):
         """Triggers when the mouse moves while the left button is held down."""
         if self.parent.isLeftClicking:  # Ensure left click is held
-            self.updateColor()
-            event.accept()  # Accept the event to ensure propagation
+            scene_pos = event.scenePos()  # Get position in scene coordinates
+            items_under_cursor = self.scene().items(scene_pos)  # Get items at cursor
+
+            for item in items_under_cursor:
+                if isinstance(item, Node):  # Ensure it's a Node
+                    item.updateColor()
+                    break  # Avoid multiple updates
+
+            event.accept()  # Accept event to stop further processing
         else:
             event.ignore()  # Ignore if the condition isn't met
+
         super().mouseMoveEvent(event)
