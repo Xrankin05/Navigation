@@ -5,6 +5,8 @@ import os
 
 # Define the scope for Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+# Define output file path
+output_file = "accessibility_scores.csv"
 
 # Load credentials from environment variable
 creds_path = os.getenv("GOOGLE_CREDENTIALS")
@@ -139,3 +141,5 @@ print(result)
 result_sorted = result.sort_values(by='score', ascending=False)
 print("\nSorted by Accessibility Score (Highest to Lowest):")
 print(result_sorted)
+# Save sorted results to CSV file (without index numbers)
+result_sorted.to_csv(output_file, index=False)
