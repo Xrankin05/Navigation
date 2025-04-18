@@ -6,8 +6,8 @@ import os
 # Define the scope for Google Sheets API
 scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
 # Define output file path
-output_file = "accessibility_scores.csv"
-
+streetOutputFile = "street_accessibility_scores.csv"
+businessOutputFile = "business_accessibility_scores.csv"
 # Load credentials from environment variable
 creds_path = os.getenv("GOOGLE_CREDENTIALS")
 if not creds_path or not os.path.exists(creds_path):
@@ -17,16 +17,22 @@ creds = ServiceAccountCredentials.from_json_keyfile_name(creds_path, scope)
 client = gspread.authorize(creds)
 
 # Open the Google Sheet with street accessibility data
-spreadsheet = client.open_by_key("1idOzW4T52Sr69Eazpn_BMcNQFvLTeBYo4Nj258uFZMU")
-streetInfo = spreadsheet.worksheet("Street_Accessibility_Info")
+streetSpreadsheet = client.open_by_key("1idOzW4T52Sr69Eazpn_BMcNQFvLTeBYo4Nj258uFZMU")
+streetInfo = streetSpreadsheet.worksheet("Street_Accessibility_Info")
+businessSpreadsheet = client.open_by_key("1-t_5-twXtjssF3e1OVUAEs8LscrXC3KiedAuUgqjFPA")
+businessInfo = businessSpreadsheet.worksheet("Business_Info")
 
 # Load data into a DataFrame
 streetData = streetInfo.get_all_records()
 streetDataFrame = pd.DataFrame(streetData)
+businessData = businessInfo.get_all_records()
+businessDataFrame = pd.DataFrame(businessData)
 
 # Check if data is empty
 if streetDataFrame.empty:
-    raise ValueError("No data retrieved from the Google Sheet. Check the sheet content or access permissions.")
+    raise ValueError("No data retrieved from the Street Sheet. Check the sheet content or access permissions.")
+if businessDataFrame.empty:
+    raise ValueError("No data retrieved from the Business Sheet. Check the sheet content or access permissions.")
 
 # Filter out rows with empty or missing 'Street Name'
 streetDataFrame = streetDataFrame[streetDataFrame['Street Name'].notna() & (streetDataFrame['Street Name'] != '')]
@@ -108,12 +114,12 @@ streetDataFrame['score'] += streetDataFrame['Sidewalk Width (FT)'].apply(lambda 
 incline_map = {'LOW': 10, 'MODERATE': 0, 'HIGH': -10}
 streetDataFrame['score'] += streetDataFrame['Incline'].map(incline_map).fillna(0)
 
-# 8. Crosswalks: +5 per digit
+# 8. Crosswalks: 2 per crosswalk capped at 30
 def crosswalk_score(n):
     if pd.isna(n) or n == 0:
         return 0
     try:
-        return 5 * len(str(int(n)))
+        return min(int(n) * 2, 30)  
     except (ValueError, TypeError):
         return 0
 streetDataFrame['score'] += streetDataFrame['Crosswalks?'].apply(crosswalk_score)
@@ -133,13 +139,104 @@ neg_comment_map = {'FEW': -5, 'SEVERAL': -10, 'MANY': -15}
 streetDataFrame['score'] += streetDataFrame['Neg Comment #'].map(neg_comment_map).fillna(-5)
 
 # Select and display results
-result = streetDataFrame[['Street Name', 'score']]
+streetResult = streetDataFrame[['Street Name', 'score']]
 print("\nWheelchair Accessibility Scores:")
-print(result)
+print(streetResult)
 
 # Sort by score (highest to lowest)
-result_sorted = result.sort_values(by='score', ascending=False)
+streetResultSorted = streetResult.sort_values(by='score', ascending=False)
 print("\nSorted by Accessibility Score (Highest to Lowest):")
-print(result_sorted)
-# Save sorted results to CSV file (without index numbers)
-result_sorted.to_csv(output_file, index=False)
+print(streetResultSorted)
+# Save sorted results to CSV file
+streetResultSorted.to_csv(streetOutputFile, index=False)
+# Initialize business score column
+businessDataFrame['score'] = 0
+
+# Apply scoring rules for businesses
+street_scores = dict(zip(streetResultSorted['Street Name'], streetResultSorted['score']))
+for index, business in businessDataFrame.iterrows():
+    # Start with street score
+    street_name = business['Street Name']
+    if street_name in street_scores:
+        businessDataFrame.at[index, 'score'] = street_scores[street_name]
+    else:
+        print(f"Warning: Street '{street_name}' not found in street data for business '{business['Company Name']}'")
+        businessDataFrame.at[index, 'score'] = 0
+
+    # Bathroom accessibility: -20 if no accessible bathrooms, +10 if accessible bathrooms, +0 if not specified
+    if business['Accessible Bathrooms?'] == 'TRUE':
+        businessDataFrame.at[index, 'score'] += 10
+    elif business['Accessible Bathrooms?'] == 'FALSE':
+        businessDataFrame.at[index, 'score'] -= 20
+    # No change if not specified
+
+    # Stairs and elevators: -50 if stairs AND no elevators, +10 if elevators, -25 if stairs AND elevator not specified
+    if business['Stairs?']:
+        if business['Elevators?'] == 'FALSE':
+            businessDataFrame.at[index, 'score'] -= 50
+        elif business['Elevators?'] == 'TRUE':
+            businessDataFrame.at[index, 'score'] += 10
+        else:  # Elevator not specified
+            businessDataFrame.at[index, 'score'] -= 25
+
+    # Surface: -10 if not flat
+    if business['Surface Type'] != 'Flat':
+        businessDataFrame.at[index, 'score'] -= 10
+
+    # Push door button: -20 if none, -10 if not specified, +5 if present
+    if business['Push door button'] == 'FALSE':
+        businessDataFrame.at[index, 'score'] -= 20
+    elif business['Push door button'] == 'TRUE':
+        businessDataFrame.at[index, 'score'] += 5
+    else:  # Not specified
+        businessDataFrame.at[index, 'score'] -= 10
+
+    # Ramps: -10 if no ramps
+    if business['Ramps?'] == False:
+        businessDataFrame.at[index, 'score'] -= 10
+
+    # Ratings: Add the value
+    try:
+        rating = float(business['Ratings (1-5)'])
+        businessDataFrame.at[index, 'score'] += rating
+    except (ValueError, TypeError):
+        pass  # Skip if rating can't be converted to float
+
+    # Maintenance: Add the value
+    try:
+        maintenance = float(business['Maintenance (1-5)'])
+        businessDataFrame.at[index, 'score'] += maintenance
+    except (ValueError, TypeError):
+        pass  # Skip if maintenance can't be converted to float
+
+    # Positive Comments: +5 few, +10 several, +15 many
+    pos_comment = str(business['Pos Comment #']).upper()
+    if pos_comment == 'FEW':
+        businessDataFrame.at[index, 'score'] += 5
+    elif pos_comment == 'SEVERAL':
+        businessDataFrame.at[index, 'score'] += 10
+    elif pos_comment in ['MANY', 'PLENTY']:
+        businessDataFrame.at[index, 'score'] += 15
+
+    # Negative Comments: -5 few, -10 several, -15 many
+    neg_comment = str(business['Neg Comment #']).upper()
+    if neg_comment == 'FEW':
+        businessDataFrame.at[index, 'score'] -= 5
+    elif neg_comment == 'SEVERAL':
+        businessDataFrame.at[index, 'score'] -= 10
+    elif neg_comment in ['MANY', 'PLENTY']:
+        businessDataFrame.at[index, 'score'] -= 15
+
+# Select and display results
+businessResult = businessDataFrame[['Company Name', 'Street Name','Address', 'score']]
+print("\nWheelchair Accessibility Scores for Businesses:")
+print(businessResult)
+
+# Sort by score (highest to lowest)
+businessDataFrame = businessDataFrame[['Company Name', 'Street Name', 'Address', 'score']]
+businessResultSorted = businessResult.sort_values(by='score', ascending=False)
+print("\nBusinesses Sorted by Accessibility Score (Highest to Lowest):")
+print(businessResultSorted)
+
+# Save sorted results to CSV file
+businessResultSorted.to_csv(businessOutputFile, index=False)
