@@ -10,8 +10,6 @@ import os
 import math
 import heapq
 
-from pynput import mouse
-
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
@@ -97,14 +95,14 @@ class MainWindow(QMainWindow):
         right_layout.addWidget(self.run_button)
 
         # Reset Visualizer Button
-        self.reset_button = QPushButton("Reset Visualizer")
-        self.reset_button.clicked.connect(self.real_color)
-        right_layout.addWidget(self.reset_button)
+        self.reset_visualizer_button = QPushButton("Reset Visualizer")
+        self.reset_visualizer_button.clicked.connect(self.real_color)
+        right_layout.addWidget(self.reset_visualizer_button)
 
         # Reset Board Button
-        self.reset_button = QPushButton("Reset Board")
-        self.reset_button.clicked.connect(self.reset_grid)
-        right_layout.addWidget(self.reset_button)
+        self.reset_board_button = QPushButton("Reset Board")
+        self.reset_board_button.clicked.connect(self.reset_grid)
+        right_layout.addWidget(self.reset_board_button)
 
         # Add sections to main layout
         main_layout.addWidget(self.view)  # Grid (left)
@@ -241,6 +239,14 @@ class MainWindow(QMainWindow):
         self.start = None
         self.goals = []
         print("Grid reset.")  # Debugging output
+    
+    def createNewGrid(self, rows, cols):
+        self.grid = [[Node(row, col, CELL_SIZE, rows, cols, self, 1) for col in range(cols)] for row in range(rows)]
+        self.scene.clear()
+        for row in self.grid:
+            for cell in row:
+                self.scene.addItem(cell)
+
 
 
 if __name__ == "__main__":

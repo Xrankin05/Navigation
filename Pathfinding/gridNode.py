@@ -19,6 +19,7 @@ class Node(QGraphicsRectItem):
         self.heuristic_to_goal = float("inf")
         self.f_score = float("inf")
         self.traversable = ["reset", "goal", "reset1", "reset2", "reset3"]
+        self.streetName = ""
 
         self.setAcceptHoverEvents(True)  # Enable hover events
         self.setAcceptedMouseButtons(Qt.LeftButton)  # Accept left clicks
@@ -106,22 +107,25 @@ class Node(QGraphicsRectItem):
             self.parent.start = self  # Set new start node
             self.currColor = self.parent.selected_color
             self.type = 'start'
+            self.color = self.currColor
         
         elif self.parent.selected_color == self.parent.color_map['goal']:
             self.parent.goals.append(self)  # Add to goal list
             self.currColor = self.parent.selected_color
             self.type = 'goal'
+            self.color = self.currColor
         
         elif self.parent.selected_color == self.parent.color_map['barrier']:
             self.currColor = self.parent.selected_color
             self.type = 'barrier'  # Mark as an obstacle
+            self.color = self.currColor
         
         elif self.parent.selected_color == self.parent.color_map['reset'] \
         or self.parent.selected_color == self.parent.color_map['reset2'] \
-        or self.parent.selected_color == self.parent.color_map['reset3'] \
         or self.parent.selected_color == self.parent.color_map['reset3']:
             self.currColor = self.parent.selected_color
             self.type = 'reset'  # Mark as empty
+            self.color = self.currColor
         
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)

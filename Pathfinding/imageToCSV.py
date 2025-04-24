@@ -6,8 +6,8 @@ import tkinter as tk
 from tkinter import filedialog
 
 # Constants
-PIXEL_PER_WIDTH = 2  # Width of each grid cell
-PIXEL_PER_HEIGHT = 2  # Height of each grid cell
+PIXEL_PER_WIDTH = 6  # Width of each grid cell
+PIXEL_PER_HEIGHT = 6  # Height of each grid cell
 OUTPUT_DIR = "Pathfinding/Grids/"
 
 # Hardcoded color palette

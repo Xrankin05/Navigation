@@ -43,40 +43,68 @@ class GridFileManager:
             self.file_selector.addItems(csv_files)
 
     def export_grid(self):
-        """Saves the current grid state as a CSV file."""
         file_name = self.file_selector.currentText().strip()
         if not file_name.endswith('.csv'):
             file_name += '.csv'
         file_path = os.path.join(self.folder_path, file_name)
-        
+
         with open(file_path, 'w', newline='') as file:
             writer = csv.writer(file)
             for row in self.parent.grid:
-                writer.writerow([f'{node.type}:{node.cost}:{node.accessible}' for node in row]) # EDIT THESE FOR EXPORTING/IMPORTING
+                row_data = []
+                for node in row:
+                    r, g, b, _ = node.color.getRgb()
+                    node_data = f"{node.type}:{r},{g},{b}:{node.cost}:{node.streetName}"
+                    row_data.append(node_data)
+                writer.writerow(row_data)  # <-- write the full row
         print(f"Grid exported to {file_path}")
         self.update_file_list()
 
+
     def import_grid(self):
-        """Loads a grid state from a selected CSV file."""
         file_name = self.file_selector.currentText().strip()
         file_path = os.path.join(self.folder_path, file_name)
-        
+
         if not os.path.exists(file_path):
             print("File not found!")
             return
-        
+
         with open(file_path, 'r') as file:
-            reader = csv.reader(file)
-            for row_idx, row in enumerate(reader):
-                for col_idx, values in enumerate(row):
-                    node = values.split(":") # EDIT THESE BELOW TO ASSIGN NODE WITH VALUES FROM CSV
-                    self.parent.grid[row_idx][col_idx].type = node[0]
-                    self.parent.grid[row_idx][col_idx].color = self.parent.color_map[node[0]]
-                    self.parent.grid[row_idx][col_idx].cost = node[1]
-                    self.parent.grid[row_idx][col_idx].accessible = node[2]
-                    #self.parent.grid[row_idx][col_idx].updateColor() # UPDATE COLOR BREAKS IT, BUT NEED TO FIGURE OUT HOW TO UPDATE PARENTS START AND GOAL NODES SOMEWHERE
-        self.parent.real_color()
+            lines = list(csv.reader(file))
+            row_count = len(lines)
+            col_count = len(lines[0]) if lines else 0
+
+            self.parent.createNewGrid(row_count, col_count)
+
+            for row_idx, row in enumerate(lines):
+                for col_idx, cell in enumerate(row):
+                    try:
+                        parts = cell.split(":")
+                        node_type = parts[0]
+                        r, g, b = map(int, parts[1].split(","))
+                        cost = float(parts[2])
+                        street_name = parts[3] if len(parts) > 3 else ""
+
+                        node = self.parent.grid[row_idx][col_idx]
+                        node.type = node_type
+                        node.color = QColor(r, g, b)
+                        node.setBrush(node.color)
+                        node.cost = cost
+                        node.streetName = street_name
+
+                        # Maintain goal/start references
+                        if node_type == 'start':
+                            self.parent.start = node
+                        elif node_type == 'goal':
+                            self.parent.goals.append(node)
+
+                    except Exception as e:
+                        print(f"Error parsing cell [{row_idx},{col_idx}]: {e}")
+
+        self.parent.fake_color()
         print(f"Grid imported from {file_path}")
+
+
 
 
     def import_color(self):
@@ -90,16 +118,25 @@ class GridFileManager:
                 return
             
             with open(file_path, 'r') as file:
-                reader = csv.reader(file)
-                for row_idx, row in enumerate(reader):
+                lines = list(csv.reader(file))
+                row_count = len(lines)
+                col_count = len(lines[0]) if lines else 0
+                self.parent.createNewGrid(row_count, col_count)
+                for row_idx, row in enumerate(lines):
                     for col_idx, value in enumerate(row):
                         value = eval(value)
                         color = QColor(value[0], value[1], value[2]) # R int G int B int values
-                        self.parent.grid[row_idx][col_idx].type = self.flipped[(color.red(), color.green(), color.blue())]
+                        type = self.flipped[(color.red(), color.green(), color.blue())]
+                        if type in ["reset", 'reset1', 'reset2', 'reset3']:
+                            type = 'reset'
+                        else:
+                            type = 'barrier'
+                        self.parent.grid[row_idx][col_idx].type = type
                         self.parent.grid[row_idx][col_idx].color = color
                         self.parent.grid[row_idx][col_idx].cost = 1
                         self.parent.grid[row_idx][col_idx].accessible = 1
-            self.parent.real_color()
+                        self.parent.grid[row_idx][col_idx].streetName = "Test Street"
+            self.parent.fake_color() # change this to real color to see traversable vs barrier
             print(f"Grid imported from {file_path}")
 
 
