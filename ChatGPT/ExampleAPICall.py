@@ -3,7 +3,7 @@ from ChatGPT.AIAPI import AIAPI
 """
 1. Set OpenAI API key as ENV variable.
 2. You are able to customize an object that ChatGPT returns.
-3. Returns sample direction object with two attributes. Start and destination as Strings.
+3. Returns sample Business object with two attributes. name and address as Strings.
 """
 
 def callCustomObject():
