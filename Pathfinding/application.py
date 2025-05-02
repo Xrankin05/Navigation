@@ -4,6 +4,7 @@ from PyQt5.QtGui import *
 from queue import PriorityQueue
 from gridNode import Node
 from colorPicker import ColorPicker
+from businessPicker import BusinessPicker
 from gridFileManager import GridFileManager
 from gridView import GridView
 import os
@@ -15,7 +16,7 @@ WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
 ROWS, COLS = 345, 285  # Grid size USED TO BE 600 100
 GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
-GRID_HEIGHT = WINDOW_HEIGHT
+GRID_HEIGHT = WINDOW_HEIGHT * 2/3
 CELL_SIZE = 10  # Adjusting size per cell
 
 # Colors
@@ -40,27 +41,50 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("PyQt5 Grid with Pathfinding")
         self.setGeometry(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT)
         self.selected_color = color_map["barrier"] # BLACK  # Default color
+        self.selected_name = ""
+        self.selected_cost = ""
         self.color_map = color_map
         self.start = None
         self.goals = []
+        self.businesses = [] # Each business is (Name, X, Y)
+        self.business_dict = { name: (x, y) for name, x, y in self.businesses }
         self.savedGridsPath = 'Pathfinding/Grids/'
         self.isLeftClicking = False  # Track mouse clicks
 
+        # For rectangle fill feature
+        self.rectangle_fill_start = None
+        self.rectangle_fill_active = False
+
         # Main widget and layout
         main_widget = QWidget()
-        main_layout = QSplitter(Qt.Horizontal)  # Splitter for left and ri ght sections
-        main_widget.setLayout(QVBoxLayout())
-        main_widget.layout().addWidget(main_layout)
+        self.main_layout = QVBoxLayout(main_widget)
         self.setCentralWidget(main_widget)
 
-        # === GRID SECTION (LEFT 2/3) ===
-        self.scene = QGraphicsScene()
-        self.view = GridView(self.scene)  # Use the modified GridView class
-        self.view.setMouseTracking(True)  # Enables movement tracking
+        # Horizontal split (Grid vs Controls)
+        split_layout = QSplitter(Qt.Horizontal)
+        self.main_layout.addWidget(split_layout)
 
-        # Set minimum size so the grid isn't locked
+        # === GRID AREA ===
+        grid_area = QWidget()
+        grid_layout = QVBoxLayout(grid_area)
+        split_layout.addWidget(grid_area)
+
+        # GridView and Scene
+        self.scene = QGraphicsScene()
+        self.view = GridView(self.scene)
+        self.view.setMouseTracking(True)
+        self.view.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.StrongFocus)
+        self.view.setFocus()
         self.view.setMinimumSize(600, 400)
-        
+        grid_layout.addWidget(self.view)
+
+        # Info Label
+        self.info_label = QLabel("Hover over a cell to see info")
+        self.info_label.setMinimumHeight(60)
+        self.info_label.setStyleSheet("background-color: #f0f0f0; padding: 6px; font-family: monospace;")
+        self.info_label.setWordWrap(True)
+        grid_layout.addWidget(self.info_label)
 
         # Create Grid
         self.grid = [[Node(row, col, CELL_SIZE, ROWS, COLS, self, 1) for col in range(COLS)] for row in range(ROWS)]
@@ -68,11 +92,11 @@ class MainWindow(QMainWindow):
             for cell in row:
                 self.scene.addItem(cell)
 
-        # === COLOR PICKER & BUTTONS SECTION (RIGHT 1/3) ===
+        # === RIGHT PANEL ===
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
+        split_layout.addWidget(right_panel)
 
-        # Color Picker
         self.color_picker = ColorPicker(color_map, self)
         right_layout.addWidget(self.color_picker)
 
@@ -81,32 +105,20 @@ class MainWindow(QMainWindow):
         layout_widget.setLayout(self.gridFileManager.layout)
         right_layout.addWidget(layout_widget)
 
+        self.business_picker = BusinessPicker(self)
+        right_layout.addWidget(self.business_picker)
 
-        # Add Replay Time Label and Text Box
-        self.replay_time_label = QLabel("Replay Time (ms):")
-        self.replay_time_input = QLineEdit()
-        self.replay_time_input.setReadOnly(True)  # Make the text box read-only
-        right_layout.addWidget(self.replay_time_label)
-        right_layout.addWidget(self.replay_time_input)
-
-        # Run Button
         self.run_button = QPushButton("Run")
         self.run_button.clicked.connect(self.find_path)
         right_layout.addWidget(self.run_button)
 
-        # Reset Visualizer Button
         self.reset_visualizer_button = QPushButton("Reset Visualizer")
         self.reset_visualizer_button.clicked.connect(self.real_color)
         right_layout.addWidget(self.reset_visualizer_button)
 
-        # Reset Board Button
         self.reset_board_button = QPushButton("Reset Board")
         self.reset_board_button.clicked.connect(self.reset_grid)
         right_layout.addWidget(self.reset_board_button)
-
-        # Add sections to main layout
-        main_layout.addWidget(self.view)  # Grid (left)
-        main_layout.addWidget(right_panel)  # Right panel (color picker + buttons)
 
     
     def find_path(self):
@@ -242,10 +254,61 @@ class MainWindow(QMainWindow):
     
     def createNewGrid(self, rows, cols):
         self.grid = [[Node(row, col, CELL_SIZE, rows, cols, self, 1) for col in range(cols)] for row in range(rows)]
+        self.start = None
+        self.goals = []
         self.scene.clear()
         for row in self.grid:
             for cell in row:
                 self.scene.addItem(cell)
+
+    # Rectangle Fill Stuff
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_T and not event.isAutoRepeat():
+            self.rectangle_fill_active = True
+            pos = self.view.mapFromGlobal(QCursor.pos())
+            scene_pos = self.view.mapToScene(pos)
+            items = self.scene.items(scene_pos)
+            for item in items:
+                if isinstance(item, Node):
+                    self.rectangle_fill_start = (item.row, item.col)
+                    print(f"[DEBUG] Rectangle fill start: {self.rectangle_fill_start}")
+                    break
+
+    def keyReleaseEvent(self, event):
+        if event.key() == Qt.Key_T and not event.isAutoRepeat() and self.rectangle_fill_start:
+            pos = self.view.mapFromGlobal(QCursor.pos())
+            scene_pos = self.view.mapToScene(pos)
+            items = self.scene.items(scene_pos)
+            for item in items:
+                if isinstance(item, Node):
+                    start_row, start_col = self.rectangle_fill_start
+                    end_row, end_col = item.row, item.col
+                    print(f"[DEBUG] Rectangle fill end: ({end_row}, {end_col})")
+
+                    top = min(start_row, end_row)
+                    bottom = max(start_row, end_row)
+                    left = min(start_col, end_col)
+                    right = max(start_col, end_col)
+
+                    for r in range(top, bottom + 1):
+                        for c in range(left, right + 1):
+                            node = self.grid[r][c]
+                            node.updateColor()
+                    break
+
+            self.rectangle_fill_start = None
+            self.rectangle_fill_active = False
+
+    def update_info_panel(self, node):
+        text = f"[Row: {node.row}, Col: {node.col}]\n"
+        text += f"Type: {node.type}, Cost: {node.cost}, Accessible: {node.accessible}\n"
+        text += f"Street Name: {node.streetName}"
+        self.info_label.setText(text)
+
+    def clear_info_panel(self):
+        self.info_label.setText("Hover over a cell to see info")
+
+
 
 
 

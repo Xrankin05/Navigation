@@ -33,7 +33,6 @@ class GridFileManager:
         self.layout.addWidget(self.export_button)
         self.layout.addWidget(self.import_grid_button)
         self.layout.addWidget(self.import_color_button)
-        #parent.main_layout.addLayout(self.layout)
 
     def update_file_list(self):
         """Updates the dropdown list with CSV files from the folder."""
@@ -50,6 +49,13 @@ class GridFileManager:
 
         with open(file_path, 'w', newline='') as file:
             writer = csv.writer(file)
+            # Export businesses manually flattened
+            businesses_data = []
+            for name, x, y in self.parent.businesses:
+                businesses_data.extend([name, str(x), str(y)])  # one entry per field
+
+            writer.writerow(businesses_data)
+
             for row in self.parent.grid:
                 row_data = []
                 for node in row:
@@ -71,6 +77,23 @@ class GridFileManager:
 
         with open(file_path, 'r') as file:
             lines = list(csv.reader(file))
+            businesses_line = lines[0]
+            self.parent.businesses = []
+
+            i = 0
+            while i < len(businesses_line):
+                try:
+                    name = businesses_line[i].strip()
+                    x = int(businesses_line[i + 1].strip())
+                    y = int(businesses_line[i + 2].strip())
+                    self.parent.businesses.append((name, x, y))
+                except Exception as e:
+                    print(f"Error parsing business at index {i}: {e}")
+                i += 3  # Move to the next set
+
+            self.parent.business_dict = { name: (int(x), int(y)) for name, x, y in self.parent.businesses }
+            self.parent.business_picker.update_list()
+            lines = lines[1:]
             row_count = len(lines)
             col_count = len(lines[0]) if lines else 0
 
