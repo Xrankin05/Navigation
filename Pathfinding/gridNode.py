@@ -103,6 +103,10 @@ class Node(QGraphicsRectItem):
                 pass
         
         # Assign new node type based on the selected color
+        if self.parent.selected_name:
+            self.streetName = self.parent.selected_name
+        if self.parent.selected_cost:
+            self.cost = float(self.parent.selected_cost)
         if self.parent.selected_color == self.parent.color_map['start']:
             self.parent.start = self  # Set new start node
             self.currColor = self.parent.selected_color
@@ -157,3 +161,12 @@ class Node(QGraphicsRectItem):
             event.ignore()  # Ignore if the condition isn't met
 
         super().mouseMoveEvent(event)
+
+    def hoverEnterEvent(self, event):
+        self.parent.update_info_panel(self)
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.parent.clear_info_panel()
+        super().hoverLeaveEvent(event)
+
