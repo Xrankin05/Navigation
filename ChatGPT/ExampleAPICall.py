@@ -6,15 +6,30 @@ from ChatGPT.AIAPI import AIAPI
 3. Returns sample direction object with two attributes. Start and destination as Strings.
 """
 
-if __name__ == "__main__":
-    ai = AIAPI()
-    apiResponse = ai.getAPIResponse()
+def callCustomObject():
+    apiResponse = ai.getCustomAPIResponse()
 
     if apiResponse is None:
-        print("There was a server error! Sorry, see you soon!")
+        print('API Call Failed\n Exiting ...')
         exit()
     else:
-        response = ai.parse_api_response(apiResponse)
+        response = ai.parse_custom_api_response(apiResponse)
         directionObject = response.dirs
         startPos = directionObject.start
         destinationPos = directionObject.destination
+
+def callStandardAPI():
+    apiResponse = ai.getAPIResponse()
+
+    if apiResponse is None:
+        print('API Call Failed\n Exiting ...')
+        exit()
+    else:
+        print(f'ChatGPT Response\n--------------------{apiResponse}--------------------')
+
+if __name__ == "__main__":
+    ai = AIAPI()
+
+    # callStandardAPI()
+
+    # callCustomObject()

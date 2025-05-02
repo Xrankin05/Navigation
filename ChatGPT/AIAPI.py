@@ -5,31 +5,68 @@ from typing import Optional
 import os
 import json
 
-class Directions(BaseModel):
-    start: str
-    destination: str
-
+class Business(BaseModel):
+    name: str
+    address: str
 
 class Response(BaseModel):
-    dirs: Directions
+    business: Business
 
 class AIAPI:
     def __init__(self):
         self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
-    def getAPIResponse(self, model = "gpt-4o-mini"):
-        system_message = """
+    # Standard ChatGPT Interaction
+    def getAPIResponse(self, model="gpt-4o-mini"):
+        system_message = f"""
+                    This is where you direct the AI in it's response. (How are we going to get it from ChatGPT)
+                    """
+
+        user_message = f"""
+                    This is the same as the chatbox for ChatGPT. (What are we asking ChatGPT)
+                    """
+
+        messages = [
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": user_message}
+        ]
+
+        try:
+            completion = self.client.chat.completions.create(
+                model=model,
+                messages=messages
+            )
+
+            return completion.choices[0].message.content
+
+        except OpenAIError as e:
+        # Handle specific OpenAI errors
+            print(f"OpenAI API error: {e}")
+            return None
+        except Exception as e:
+            # Handle other potential errors
+            print(f"An unexpected error occurred: {e}")
+            return None
+
+    # Custom Object ChatGPT Response
+    def getCustomAPIResponse(self, model = "gpt-4o-mini"):
+        system_message = f"""
             This is where you direct the AI in it's response. (How are we going to get it from ChatGPT)
             """
 
         user_message = f"""
-            This is the same as the chatbox for ChatGPT. (What are we trying to get from ChatGPT)
+            This is the same as the chatbox for ChatGPT. (What are we asking ChatGPT)
             """
 
         messages = [
             {"role": "system", "content": system_message},
             {"role": "user", "content": user_message}
         ]
+
+        completion = self.client.chat.completions.create(
+            model=model,
+            messages=messages
+        )
 
         try:
             completion = self.client.beta.chat.completions.parse(
@@ -54,7 +91,7 @@ class AIAPI:
             print(f"An unexpected error occurred: {e}")
             return None
 
-    def parse_api_response(self, json_str: str) -> Response:
+    def parse_custom_api_response(self, json_str: str) -> Response:
         try:
             # Load JSON string into a Python dictionary
             data = json.loads(json_str)
