@@ -51,8 +51,8 @@ class GridFileManager:
             writer = csv.writer(file)
             # Export businesses manually flattened
             businesses_data = []
-            for name, x, y in self.parent.businesses:
-                businesses_data.extend([name, str(x), str(y)])  # one entry per field
+            for name, x, y, score in self.parent.businesses:
+                businesses_data.extend([name, str(x), str(y), str(score)])  # one entry per field
 
             writer.writerow(businesses_data)
 
@@ -86,12 +86,13 @@ class GridFileManager:
                     name = businesses_line[i].strip()
                     x = int(businesses_line[i + 1].strip())
                     y = int(businesses_line[i + 2].strip())
-                    self.parent.businesses.append((name, x, y))
+                    score = int(businesses_line[i + 3].strip())
+                    self.parent.businesses.append((name, x, y, score))
                 except Exception as e:
                     print(f"Error parsing business at index {i}: {e}")
-                i += 3  # Move to the next set
+                i += 4  # Move to the next set
 
-            self.parent.business_dict = { name: (int(x), int(y)) for name, x, y in self.parent.businesses }
+            self.parent.business_dict = { name: (int(x), int(y), float(score)) for name, x, y, score in self.parent.businesses }
             self.parent.business_picker.update_list()
             lines = lines[1:]
             row_count = len(lines)

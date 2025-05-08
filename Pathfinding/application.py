@@ -50,6 +50,8 @@ class MainWindow(QMainWindow):
         self.business_dict = { name: (x, y) for name, x, y in self.businesses }
         self.savedGridsPath = 'Pathfinding/Grids/'
         self.isLeftClicking = False  # Track mouse clicks
+        self.stop_requested = False
+
 
         # For rectangle fill feature
         self.rectangle_fill_start = None
@@ -112,6 +114,11 @@ class MainWindow(QMainWindow):
         self.run_button.clicked.connect(self.find_path)
         right_layout.addWidget(self.run_button)
 
+        self.stop_button = QPushButton("Stop")
+        self.stop_button.clicked.connect(self.request_stop)
+        right_layout.addWidget(self.stop_button)
+
+
         self.reset_visualizer_button = QPushButton("Reset Visualizer")
         self.reset_visualizer_button.clicked.connect(self.real_color)
         right_layout.addWidget(self.reset_visualizer_button)
@@ -137,6 +144,8 @@ class MainWindow(QMainWindow):
         
         for goal in goals:
             print(f"Finding path to goal at ({goal.row}, {goal.col})")  # Debugging
+            self.stop_requested = False  # Reset stop flag before starting
+
 
             # Initialize the priority queue for open set
             open_set = PriorityQueue()
@@ -151,6 +160,11 @@ class MainWindow(QMainWindow):
             open_set_hash = {current_start}
 
             while not open_set.empty():
+                if self.stop_requested:
+                    print("[INFO] Pathfinding stopped by user.")
+                    self.fake_color()
+                    return
+
                 _, current = open_set.get()
                 open_set_hash.remove(current)
 
@@ -196,6 +210,9 @@ class MainWindow(QMainWindow):
         self.visualize_full_path(full_path)
         print("All goals reached!")  # Debugging
 
+    def request_stop(self):
+        print("[INFO] Pathfinding stop requested.")
+        self.stop_requested = True
 
 
 

@@ -131,6 +131,11 @@ class Node(QGraphicsRectItem):
             self.type = 'reset'  # Mark as empty
             self.color = self.currColor
         
+        elif self.parent.selected_color == self.parent.color_map['path_point']:
+            self.currColor = self.parent.selected_color
+            self.type = 'path_point'  # Mark as path_point
+            self.color = self.currColor
+        
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)
 
