@@ -14,7 +14,7 @@ import heapq
 # Constants
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
-ROWS, COLS = 345, 285  # Grid size USED TO BE 600 100
+ROWS, COLS = 160, 320  # Grid size USED TO BE 600 100
 GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
 GRID_HEIGHT = WINDOW_HEIGHT * 2/3
 CELL_SIZE = 10  # Adjusting size per cell
