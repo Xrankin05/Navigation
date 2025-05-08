@@ -82,11 +82,22 @@ class MainWindow(QMainWindow):
         grid_layout.addWidget(self.view)
 
         # Info Label
+        info_panel = QWidget()
+        info_layout = QHBoxLayout(info_panel)
+
         self.info_label = QLabel("Hover over a cell to see info")
         self.info_label.setMinimumHeight(60)
         self.info_label.setStyleSheet("background-color: #f0f0f0; padding: 6px; font-family: monospace;")
         self.info_label.setWordWrap(True)
-        grid_layout.addWidget(self.info_label)
+        info_layout.addWidget(self.info_label, 1)
+
+        self.directions_box = QTextEdit()
+        self.directions_box.setReadOnly(True)
+        self.directions_box.setMinimumHeight(60)
+        self.directions_box.setStyleSheet("background-color: #f9f9f9; padding: 6px; font-family: monospace;")
+        info_layout.addWidget(self.directions_box, 2)
+
+        grid_layout.addWidget(info_panel)
 
         # Create Grid
         self.grid = [[Node(row, col, CELL_SIZE, ROWS, COLS, self, 1) for col in range(COLS)] for row in range(ROWS)]
@@ -214,6 +225,11 @@ class MainWindow(QMainWindow):
         print("Reconstructing full path through all goals...")  # Debugging
         self.visualize_full_path(full_path)
         print("All goals reached!")  # Debugging
+        print("Generating Play By Play")  # Debugging
+        summary = self.get_path_summary(full_path)
+        #response = self.get_english_response(summary)
+
+
 
     def request_stop(self):
         print("[INFO] Pathfinding stop requested.")
@@ -241,6 +257,23 @@ class MainWindow(QMainWindow):
         
         path_segment.reverse()  # Reverse to get start -> goal order
         return path_segment
+
+    def get_path_summary(self, path_nodes):
+        """
+        Given a list of nodes (from final path), return a list of dictionaries with
+        row, col, and street name. Useful for GPT to generate directions.
+        """
+        summary = []
+
+        for node in path_nodes:
+            entry = {
+                "row": node.row,
+                "col": node.col,
+                "street": node.streetName.strip() if node.streetName else "Unnamed Road"
+            }
+            summary.append(entry)
+
+        return summary
 
 
     def visualize_full_path(self, full_path):
