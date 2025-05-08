@@ -124,9 +124,17 @@ class Node(QGraphicsRectItem):
             self.type = 'barrier'  # Mark as an obstacle
             self.color = self.currColor
         
-        elif self.parent.selected_color == self.parent.color_map['reset'] \
-        or self.parent.selected_color == self.parent.color_map['reset2'] \
-        or self.parent.selected_color == self.parent.color_map['reset3']:
+        elif self.parent.selected_color == self.parent.color_map['reset3']:
+            self.currColor = self.parent.selected_color
+            self.type = 'reset3'  # Mark as empty
+            self.color = self.currColor
+
+        elif self.parent.selected_color == self.parent.color_map['reset2']:
+            self.currColor = self.parent.selected_color
+            self.type = 'reset2'  # Mark as empty
+            self.color = self.currColor
+        
+        elif self.parent.selected_color == self.parent.color_map['reset']:
             self.currColor = self.parent.selected_color
             self.type = 'reset'  # Mark as empty
             self.color = self.currColor
@@ -134,6 +142,11 @@ class Node(QGraphicsRectItem):
         elif self.parent.selected_color == self.parent.color_map['path_point']:
             self.currColor = self.parent.selected_color
             self.type = 'path_point'  # Mark as path_point
+            self.color = self.currColor
+
+        elif self.parent.selected_color == self.parent.color_map['closed']:
+            self.currColor = self.parent.selected_color
+            self.type = 'closed'  # Mark as closed
             self.color = self.currColor
         
         # Apply the selected color to the node

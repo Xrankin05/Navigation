@@ -117,6 +117,11 @@ class MainWindow(QMainWindow):
         self.stop_button = QPushButton("Stop")
         self.stop_button.clicked.connect(self.request_stop)
         right_layout.addWidget(self.stop_button)
+        
+        ## Comment me out later
+        #self.update_types_button = QPushButton("Update Types from Colors")
+        #self.update_types_button.clicked.connect(self.update_types_from_colors)
+        #right_layout.addWidget(self.update_types_button) 
 
 
         self.reset_visualizer_button = QPushButton("Reset Visualizer")
@@ -325,8 +330,23 @@ class MainWindow(QMainWindow):
     def clear_info_panel(self):
         self.info_label.setText("Hover over a cell to see info")
 
+    def update_types_from_colors(self):
+        """
+        Update all node types based on their current color.
+        """
+        updated = 0
+        color_to_type = {v.name(): k for k, v in self.color_map.items()}
 
-
+        for row in self.grid:
+            for node in row:
+                color_name = node.color.name()
+                if color_name in color_to_type:
+                    node_type = color_to_type[color_name]
+                    node.type = node_type
+                    updated += 1
+                else:
+                    print(f"[WARNING] Unknown color for node at ({node.row}, {node.col}): {color_name}")
+        print(f"[INFO] Updated {updated} node types from color.")
 
 
 if __name__ == "__main__":
