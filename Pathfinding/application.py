@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
         self.start = None
         self.goals = []
         self.businesses = [] # Each business is (Name, X, Y)
-        self.business_dict = { name: (x, y) for name, x, y in self.businesses }
+        self.business_dict = { name: (x, y, score) for name, x, y, score in self.businesses }
         self.savedGridsPath = 'Pathfinding/Grids/'
         self.isLeftClicking = False  # Track mouse clicks
         self.stop_requested = False
@@ -179,7 +179,7 @@ class MainWindow(QMainWindow):
                     break  # Exit loop and move to the next goal
 
                 for neighbor in current.neighbors:
-                    temp_g_score = g_score[current] + neighbor.cost
+                    temp_g_score = g_score[current] + neighbor.cost / 100 # EDIT THIS TO TWEAK WEIGHTS
 
                     if temp_g_score < g_score[neighbor]:
                         came_from[neighbor] = current
