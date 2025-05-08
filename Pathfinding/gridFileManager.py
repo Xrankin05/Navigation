@@ -86,7 +86,8 @@ class GridFileManager:
                     name = businesses_line[i].strip()
                     x = int(businesses_line[i + 1].strip())
                     y = int(businesses_line[i + 2].strip())
-                    score = int(businesses_line[i + 3].strip())
+                    #score = int(businesses_line[i + 3].strip())
+                    score = float(businesses_line[i + 3].strip())
                     self.parent.businesses.append((name, x, y, score))
                 except Exception as e:
                     print(f"Error parsing business at index {i}: {e}")
