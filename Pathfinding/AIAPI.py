@@ -1,9 +1,6 @@
 from openai import OpenAI
 from openai._exceptions import OpenAIError
-from pydantic import BaseModel, Field, ValidationError
-from typing import Optional
 import os
-import json
 
 # class Business(BaseModel):
 #     name: str
@@ -17,12 +14,22 @@ class AIAPI:
         self.client = OpenAI(api_key=os.environ['OPENAI_API_KEY'])
 
     # Standard ChatGPT Interaction
-    def getAPIResponse(self, model="gpt-4o-mini"):
+    def getAPIResponse(self, path_text, model="gpt-4o-mini"):
         # This is where you direct the AI in it's response. (How are we going to get it from ChatGPT)
-        system_message = ""
+        system_message = "You are a helpful navigation assistant."
 
         # This is the same as the chatbox for ChatGPT. (What are we asking ChatGPT)
-        user_message = ""
+        user_message = f"""
+        You are a navigation assistant. Given a list of grid path steps with row, col, and street name, generate step-by-step human-friendly directions like Google Maps.
+
+        Use patterns like:
+        - Continue down [street] for [X] blocks.
+        - Turn left/right onto [street].
+        - Arrive at destination.
+
+        Here is the path:
+        {path_text}
+        """
 
         messages = [
             {"role": "system", "content": system_message},

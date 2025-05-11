@@ -4,8 +4,8 @@ from PyQt5.QtGui import *
 
 class BusinessPicker(QWidget):
 	def __init__(self, parent):
-		super().__init__()  # Missing! This is very important
-		self.parent = parent  # Reference to the main application
+		super().__init__()
+		self.parent = parent
 
 		# Dropdown Boxes
 		self.pathfind_from = QComboBox()
@@ -27,12 +27,12 @@ class BusinessPicker(QWidget):
 
 		self.update_list()  # Update list after setting up widgets
 
+	# Updates the dropdown list with business names
 	def update_list(self):
-		"""Updates the dropdown list with business names."""
 		self.pathfind_to.clear()
 		self.pathfind_from.clear()
 		if self.parent.businesses:
-			business_names = [business[0] for business in self.parent.businesses]  # Only names
+			business_names = [f"{name} (Score: {score})" for name, _, _, score in self.parent.businesses]  # Only names and score
 			self.pathfind_from.addItems(business_names)
 			self.pathfind_to.addItems(business_names)
 
@@ -40,7 +40,7 @@ class BusinessPicker(QWidget):
 		business_start_name = self.pathfind_from.currentText().strip()
 		business_end_name = self.pathfind_to.currentText().strip()
 
-		# Use parent's business_dict (safer and faster)
+		# Use parent's business_dict
 		start_coords = self.parent.business_dict[business_start_name]
 		end_coords = self.parent.business_dict[business_end_name]
 

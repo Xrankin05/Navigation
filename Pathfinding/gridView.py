@@ -24,8 +24,8 @@ class GridView(QGraphicsView):
 		self.last_mouse_pos = None
 		self.panning = False
 
+	# Zoom in and out smoothly at cursor location
 	def wheelEvent(self, event: QWheelEvent):
-		"""Zoom in and out smoothly at cursor location."""
 		zoom_factor = 1.2 if event.angleDelta().y() > 0 else 1 / 1.2
 		mouse_scene_pos = self.mapToScene(event.pos())
 
@@ -34,8 +34,8 @@ class GridView(QGraphicsView):
 		self.scale(zoom_factor, zoom_factor)
 		self.setTransformationAnchor(QGraphicsView.NoAnchor)
 
+	# Start panning when right-click is pressed
 	def mousePressEvent(self, event: QMouseEvent):
-		"""Start panning when right-click is pressed."""
 		if event.button() == Qt.RightButton:
 			self.last_mouse_pos = event.pos()
 			self.panning = True
@@ -53,8 +53,8 @@ class GridView(QGraphicsView):
 			# Let other events (like painting) propagate
 			super().mouseMoveEvent(event)
 
+	# Stop panning when right mouse button is released
 	def mouseReleaseEvent(self, event: QMouseEvent):
-		"""Stop panning when right mouse button is released."""
 		if event.button() == Qt.RightButton:
 			self.panning = False
 			self.setCursor(Qt.ArrowCursor)

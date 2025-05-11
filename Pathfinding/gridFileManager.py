@@ -7,7 +7,7 @@ import csv
 class GridFileManager:
 
     def __init__(self, parent, folder_path):
-        self.parent = parent  # Reference to the main application
+        self.parent = parent
         self.folder_path = folder_path  # Folder to scan for CSV files
         self.flipped = self.flip_dict(parent.color_map)
         # Dropdown/Typing Box
@@ -34,13 +34,14 @@ class GridFileManager:
         self.layout.addWidget(self.import_grid_button)
         self.layout.addWidget(self.import_color_button)
 
+    # Updates the dropdown list with CSV files from the folder.
     def update_file_list(self):
-        """Updates the dropdown list with CSV files from the folder."""
         self.file_selector.clear()
         if os.path.exists(self.folder_path):
             csv_files = [f for f in os.listdir(self.folder_path) if f.endswith('.csv')]
             self.file_selector.addItems(csv_files)
 
+    # Exports current grid as filename
     def export_grid(self):
         file_name = self.file_selector.currentText().strip()
         if not file_name.endswith('.csv'):
@@ -49,10 +50,9 @@ class GridFileManager:
 
         with open(file_path, 'w', newline='') as file:
             writer = csv.writer(file)
-            # Export businesses manually flattened
             businesses_data = []
             for name, x, y, score in self.parent.businesses:
-                businesses_data.extend([name, str(x), str(y), str(score)])  # one entry per field
+                businesses_data.extend([name, str(x), str(y), str(score)])  # one entry per field, extend instead of append to add all 3 seperately
 
             writer.writerow(businesses_data)
 
@@ -62,11 +62,11 @@ class GridFileManager:
                     r, g, b, _ = node.color.getRgb()
                     node_data = f"{node.type}:{r},{g},{b}:{node.cost}:{node.streetName}"
                     row_data.append(node_data)
-                writer.writerow(row_data)  # <-- write the full row
+                writer.writerow(row_data)
         print(f"Grid exported to {file_path}")
         self.update_file_list()
 
-
+    # Import a grid state from a csv file
     def import_grid(self):
         file_name = self.file_selector.currentText().strip()
         file_path = os.path.join(self.folder_path, file_name)
@@ -129,48 +129,38 @@ class GridFileManager:
         self.parent.fake_color()
         print(f"Grid imported from {file_path}")
 
-
-
-
+    # Legacy code for import grid from color files for map image quick setup
     def import_color(self):
-            """Loads a grid state from a selected CSV file."""
-            file_name = self.file_selector.currentText().strip()
-            file_path = os.path.join(self.folder_path, file_name)
-            print(os.getcwd())
-            print (file_path)
-            if not os.path.exists(file_path):
-                print("File not found!")
-                return
-            
-            with open(file_path, 'r') as file:
-                lines = list(csv.reader(file))
-                row_count = len(lines)
-                col_count = len(lines[0]) if lines else 0
-                self.parent.createNewGrid(row_count, col_count)
-                for row_idx, row in enumerate(lines):
-                    for col_idx, value in enumerate(row):
-                        value = eval(value)
-                        color = QColor(value[0], value[1], value[2]) # R int G int B int values
-                        type = self.flipped[(color.red(), color.green(), color.blue())]
-                        if type in ["reset", 'reset1', 'reset2', 'reset3']:
-                            type = 'reset'
-                        else:
-                            type = 'barrier'
-                        self.parent.grid[row_idx][col_idx].type = type
-                        self.parent.grid[row_idx][col_idx].color = color
-                        self.parent.grid[row_idx][col_idx].cost = 1
-                        self.parent.grid[row_idx][col_idx].accessible = 1
-                        self.parent.grid[row_idx][col_idx].streetName = "Test Street"
-            self.parent.fake_color() # change this to real color to see traversable vs barrier
-            print(f"Grid imported from {file_path}")
-
-
-    def flip_dict(self, d):
-        """
-        Flips the keys and values of a dictionary.
-        If multiple keys have the same value, only one will be kept in the flipped dictionary.
+        file_name = self.file_selector.currentText().strip()
+        file_path = os.path.join(self.folder_path, file_name)
+        print(os.getcwd())
+        print (file_path)
+        if not os.path.exists(file_path):
+            print("File not found!")
+            return
         
-        :param d: Dictionary to flip
-        :return: Flipped dictionary
-        """
+        with open(file_path, 'r') as file:
+            lines = list(csv.reader(file))
+            row_count = len(lines)
+            col_count = len(lines[0]) if lines else 0
+            self.parent.createNewGrid(row_count, col_count)
+            for row_idx, row in enumerate(lines):
+                for col_idx, value in enumerate(row):
+                    value = eval(value)
+                    color = QColor(value[0], value[1], value[2]) # R int G int B int values
+                    type = self.flipped[(color.red(), color.green(), color.blue())]
+                    if type in ["reset", 'reset1', 'reset2', 'reset3']:
+                        type = 'reset'
+                    else:
+                        type = 'barrier'
+                    self.parent.grid[row_idx][col_idx].type = type
+                    self.parent.grid[row_idx][col_idx].color = color
+                    self.parent.grid[row_idx][col_idx].cost = 1
+                    self.parent.grid[row_idx][col_idx].accessible = 1
+                    self.parent.grid[row_idx][col_idx].streetName = "Test Street"
+        self.parent.fake_color() # change this to real color to see traversable vs barrier
+        print(f"Grid imported from {file_path}")
+
+    # Used to flip the dictionary
+    def flip_dict(self, d):
         return { (v.red(), v.green(), v.blue()): k for k, v in d.items() }

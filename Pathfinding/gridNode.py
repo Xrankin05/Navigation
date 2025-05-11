@@ -3,10 +3,6 @@ from PyQt5.QtCore import Qt  # Import for event handling
 from PyQt5.QtGui import *
 
 class Node(QGraphicsRectItem):
-    """
-    Represents a single cell (node) in the grid.
-    Each node can have different types (start, goal, barrier, etc.).
-    """
     def __init__(self, row, col, width, total_rows, total_cols, parent, cost):
         super().__init__(0, 0, width, width)  # Initialize a square grid cell
         
@@ -38,33 +34,24 @@ class Node(QGraphicsRectItem):
         self.setFlag(QGraphicsRectItem.ItemIsSelectable, True)
         self.setAcceptHoverEvents(True)  # Enable hover events
         
-        # Cost (used in pathfinding algorithms like A*)
-        self.cost = cost  # Cost to move into this node (for weighted pathfinding)
-        self.accessible = True  # Whether the node is traversable
+        self.cost = cost  # Cost to move into this node
+        self.accessible = True  # Whether the node is traversable (outdated)
 
+    # For when nodes cost the same
     def __lt__(self, other):
-        """
-        Tiebreaker for nodes with equal f_score.
-        Prioritizes nodes closer to the goal.
-        """
         if self.f_score == other.f_score:
-            # Prefer nodes closer to the goal (heuristic acts as a secondary sorting criteria)
+            # Prefer nodes closer to the goal
             return self.heuristic_to_goal < other.heuristic_to_goal  
         return False  # Otherwise, priority queue will use f_score by default
 
+    # Resets the node to its default state (empty space)
     def reset(self):
-        """
-        Resets the node to its default state (empty space).
-        """
         self.color = self.parent.color_map['reset']
         self.type = 'reset'
         self.setBrush(self.color)  # Update display color
 
+    # Updates the list of accessible (non-barrier) neighbors. Checks up, down, left, and right.
     def update_neighbors(self, grid):
-        """
-        Updates the list of accessible (non-barrier) neighbors.
-        Checks up, down, left, and right.
-        """
         self.neighbors = []
         
         # Check DOWN (row + 1) if it's within bounds and not a barrier
@@ -152,19 +139,19 @@ class Node(QGraphicsRectItem):
         # Apply the selected color to the node
         self.setBrush(self.parent.selected_color)
 
+    # Start panning with right mouse button
     def mousePressEvent(self, event: QMouseEvent):
-        """Start panning with right mouse button"""
         if event.button() == Qt.LeftButton:
             self.parent.isLeftClicking = True
             self.updateColor()
 
+    # End panning with right mouse button
     def mouseReleaseEvent(self, event: QMouseEvent):
-        """Start panning with right mouse button"""
         if event.button() == Qt.LeftButton:
             self.parent.isLeftClicking = False
 
+    #  Triggers when the mouse moves while the left button is held down
     def mouseMoveEvent(self, event):
-        """Triggers when the mouse moves while the left button is held down."""
         if self.parent.isLeftClicking:  # Ensure left click is held
             scene_pos = event.scenePos()  # Get position in scene coordinates
             items_under_cursor = self.scene().items(scene_pos)  # Get items at cursor
@@ -180,10 +167,12 @@ class Node(QGraphicsRectItem):
 
         super().mouseMoveEvent(event)
 
+    # Updates node info in info panel
     def hoverEnterEvent(self, event):
         self.parent.update_info_panel(self)
         super().hoverEnterEvent(event)
 
+    # Clears node info in info panel
     def hoverLeaveEvent(self, event):
         self.parent.clear_info_panel()
         super().hoverLeaveEvent(event)

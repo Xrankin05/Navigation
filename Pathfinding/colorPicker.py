@@ -2,7 +2,6 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QPushButton, QGridLayout, QSizePol
 from PyQt5.QtCore import Qt
 
 class ColorPicker(QWidget):
-    """Widget to display color selection buttons with a 2-column layout."""
 
     def __init__(self, colors, parent):
         super().__init__()

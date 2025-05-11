@@ -7,19 +7,17 @@ from colorPicker import ColorPicker
 from businessPicker import BusinessPicker
 from gridFileManager import GridFileManager
 from gridView import GridView
-import os
-import math
-import heapq
+from AIAPI import AIAPI
 
-# Constants
+# Window and grid configuration
 WINDOW_WIDTH = 900
 WINDOW_HEIGHT = 600
-ROWS, COLS = 160, 320  # Grid size USED TO BE 600 100
-GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)  # Left section (2/3 of the window)
-GRID_HEIGHT = WINDOW_HEIGHT * 2/3
-CELL_SIZE = 10  # Adjusting size per cell
+ROWS, COLS = 160, 320
+GRID_WIDTH = int(WINDOW_WIDTH * 2 / 3)
+GRID_HEIGHT = int(WINDOW_HEIGHT * 2 / 3)
+CELL_SIZE = 10
 
-# Colors
+# Color mapping for cell types
 color_map = {
     "closed": QColor(171, 211, 223), # BLUE
     "reset2": QColor(233, 151, 163), # RED
@@ -40,16 +38,16 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("PyQt5 Grid with Pathfinding")
         self.setGeometry(100, 100, WINDOW_WIDTH, WINDOW_HEIGHT)
-        self.selected_color = color_map["barrier"] # BLACK  # Default color
+        self.selected_color = color_map["barrier"]
         self.selected_name = ""
         self.selected_cost = ""
         self.color_map = color_map
         self.start = None
         self.goals = []
-        self.businesses = [] # Each business is (Name, X, Y)
+        self.businesses = []
         self.business_dict = { name: (x, y, score) for name, x, y, score in self.businesses }
         self.savedGridsPath = 'Pathfinding/Grids/'
-        self.isLeftClicking = False  # Track mouse clicks
+        self.isLeftClicking = False
         self.stop_requested = False
 
 
@@ -66,7 +64,7 @@ class MainWindow(QMainWindow):
         split_layout = QSplitter(Qt.Horizontal)
         self.main_layout.addWidget(split_layout)
 
-        # === GRID AREA ===
+        # Grid Area
         grid_area = QWidget()
         grid_layout = QVBoxLayout(grid_area)
         split_layout.addWidget(grid_area)
@@ -105,7 +103,7 @@ class MainWindow(QMainWindow):
             for cell in row:
                 self.scene.addItem(cell)
 
-        # === RIGHT PANEL ===
+        # Right Panel
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
         split_layout.addWidget(right_panel)
@@ -129,11 +127,10 @@ class MainWindow(QMainWindow):
         self.stop_button.clicked.connect(self.request_stop)
         right_layout.addWidget(self.stop_button)
         
-        ## Comment me out later
+        ## Used for updating map based on color not given type
         #self.update_types_button = QPushButton("Update Types from Colors")
         #self.update_types_button.clicked.connect(self.update_types_from_colors)
         #right_layout.addWidget(self.update_types_button) 
-
 
         self.reset_visualizer_button = QPushButton("Reset Visualizer")
         self.reset_visualizer_button.clicked.connect(self.real_color)
@@ -145,21 +142,21 @@ class MainWindow(QMainWindow):
 
     
     def find_path(self):
-        print("Starting A* Pathfinding...")  # Debugging
+        print("Starting A* Pathfinding...")
         for row in self.grid:
             for node in row:
                 node.update_neighbors(self.grid)  # Updates all nodes in the grid with their neighbors.
 
         goals = self.goals[:]
         if not self.start or not goals:
-            print("No start or goals set!")  # Debugging
+            print("No start or goals set!")
             return
 
         current_start = self.start
         full_path = []  # List to store the full path across all goals
         
         for goal in goals:
-            print(f"Finding path to goal at ({goal.row}, {goal.col})")  # Debugging
+            print(f"Finding path to goal at ({goal.row}, {goal.col})") 
             self.stop_requested = False  # Reset stop flag before starting
 
 
@@ -167,7 +164,7 @@ class MainWindow(QMainWindow):
             open_set = PriorityQueue()
             open_set.put((0, current_start))
             came_from = {}  # Dictionary to keep track of the path
-            closed_set = set()  # Set to track fully processed nodes
+            closed_set = set()  # Set to track fully checked nodes
             g_score = {node: float("inf") for row in self.grid for node in row}
             g_score[current_start] = 0
             f_score = {node: float("inf") for row in self.grid for node in row}
@@ -188,14 +185,14 @@ class MainWindow(QMainWindow):
                     continue
 
                 if current == goal:
-                    print(f"Goal at ({goal.row}, {goal.col}) reached!")  # Debugging
+                    print(f"Goal at ({goal.row}, {goal.col}) reached!")
                     segment_path = self.reconstruct_path(came_from, current)  # Get the segment path
                     full_path.extend(segment_path)  # Append to full path
                     current_start = goal  # Update the start for the next segment
                     break  # Exit loop and move to the next goal
 
                 for neighbor in current.neighbors:
-                    temp_g_score = g_score[current] + neighbor.cost / 100 # EDIT THIS TO TWEAK WEIGHTS
+                    temp_g_score = g_score[current] + neighbor.cost / 80 # Edit this to tweak weights (100)
 
                     if temp_g_score < g_score[neighbor]:
                         came_from[neighbor] = current
@@ -217,17 +214,16 @@ class MainWindow(QMainWindow):
 
             else:
                 # If we exit the while loop without breaking, no path was found
-                print(f"No path found to goal at ({goal.row}, {goal.col})!")  # Debugging
+                print(f"No path found to goal at ({goal.row}, {goal.col})!")
                 self.real_color()
                 return  # Stop searching if one goal is unreachable
 
         # After all goals are processed, reconstruct the entire path taken
-        print("Reconstructing full path through all goals...")  # Debugging
+        print("Reconstructing full path through all goals...") 
         self.visualize_full_path(full_path)
-        print("All goals reached!")  # Debugging
-        print("Generating Play By Play")  # Debugging
-        summary = self.get_path_summary(full_path)
-        #response = self.get_english_response(summary)
+        print("All goals reached!") 
+        print("Generating Play By Play") 
+        self.generate_directions_from_path(full_path)
 
 
 
@@ -236,17 +232,15 @@ class MainWindow(QMainWindow):
         self.stop_requested = True
 
 
-
+    # Manhattan distance
     def heuristic(self, node1, node2):
-        """Manhattan distance with slight bias for forward movement"""
         dx = abs(node2.col - node1.col)
         dy = abs(node2.row - node1.row)
         return dx + dy
 
 
-
+    # Reconstructs the path from goal to start and returns it
     def reconstruct_path(self, came_from, current):
-        """Reconstructs the path from goal to start and returns it"""
         path_segment = []
         while current in came_from:
             current = came_from[current]
@@ -258,11 +252,8 @@ class MainWindow(QMainWindow):
         path_segment.reverse()  # Reverse to get start -> goal order
         return path_segment
 
+    # Given a list of nodes , return a list of dictionaries with row, col, and street name
     def get_path_summary(self, path_nodes):
-        """
-        Given a list of nodes (from final path), return a list of dictionaries with
-        row, col, and street name. Useful for GPT to generate directions.
-        """
         summary = []
 
         for node in path_nodes:
@@ -275,9 +266,40 @@ class MainWindow(QMainWindow):
 
         return summary
 
+    # OpenAI call with path summary to get normal map navigational readings
+    def generate_directions_from_path(self, path_nodes):
+        if not path_nodes:
+            self.directions_box.setText("No path found.")
+            return
 
+        # Prepare the path summary
+        summary = self.get_path_summary(path_nodes)
+
+        # Format it as a string
+        path_text = "[\n" + ",\n".join([
+            f"{{\"row\": {n['row']}, \"col\": {n['col']}, \"street\": \"{n['street']}\"}}"
+            for n in summary
+        ]) + "\n]"
+
+        # Send the prompt to OpenAI
+        try:
+            ai = AIAPI()
+            apiResponse = ai.getAPIResponse(path_text)
+
+            if apiResponse is None:
+                # Exceptions
+                print('API Call Failed\n Exiting ...')
+                apiResponse = f"Error with API Request, most likely insufficient api tokens.\n{path_text}"
+            else:
+                print(f'ChatGPT Response\n--------------------\n{apiResponse}\n--------------------')
+
+            self.directions_box.setText(apiResponse)
+
+        except Exception as e:
+            self.directions_box.setText(f"Error generating directions: {e}")
+
+    # Visually reconstructs the entire path across all goals
     def visualize_full_path(self, full_path):
-        """Visually reconstructs the entire path across all goals"""
         for node in full_path:
             self.set_preview_color(node, self.color_map['start'])
             QApplication.processEvents()
@@ -299,13 +321,12 @@ class MainWindow(QMainWindow):
                 cell.setBrush(cell.color)
 
     def reset_grid(self):
-        """Resets the grid to its initial state."""
         for row in self.grid:
             for cell in row:
                 cell.reset()
         self.start = None
         self.goals = []
-        print("Grid reset.")  # Debugging output
+        print("Grid reset.")
     
     def createNewGrid(self, rows, cols):
         self.grid = [[Node(row, col, CELL_SIZE, rows, cols, self, 1) for col in range(cols)] for row in range(rows)]
@@ -329,6 +350,7 @@ class MainWindow(QMainWindow):
                     print(f"[DEBUG] Rectangle fill start: {self.rectangle_fill_start}")
                     break
 
+    # Rectangle Fill Stuff
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_T and not event.isAutoRepeat() and self.rectangle_fill_start:
             pos = self.view.mapFromGlobal(QCursor.pos())
@@ -363,10 +385,8 @@ class MainWindow(QMainWindow):
     def clear_info_panel(self):
         self.info_label.setText("Hover over a cell to see info")
 
+    # Update all node types based on their current color
     def update_types_from_colors(self):
-        """
-        Update all node types based on their current color.
-        """
         updated = 0
         color_to_type = {v.name(): k for k, v in self.color_map.items()}
 
