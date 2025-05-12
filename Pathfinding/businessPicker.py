@@ -37,8 +37,13 @@ class BusinessPicker(QWidget):
 			self.pathfind_to.addItems(business_names)
 
 	def pathfind(self):
-		business_start_name = self.pathfind_from.currentText().strip()
-		business_end_name = self.pathfind_to.currentText().strip()
+		# Get to and from names
+		business_start_name_raw = self.pathfind_from.currentText().strip()
+		business_end_name_raw = self.pathfind_to.currentText().strip()
+
+		# Strip the score part of the name from the dropdown
+		business_start_name = business_start_name_raw.rsplit(" (Score:", 1)[0]
+		business_end_name = business_end_name_raw.rsplit(" (Score:", 1)[0]
 
 		# Use parent's business_dict
 		start_coords = self.parent.business_dict[business_start_name]
