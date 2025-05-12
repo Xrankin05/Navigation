@@ -27,6 +27,11 @@ class AIAPI:
         - Turn left/right onto [street].
         - Arrive at destination.
 
+        Return strictly the path directions. Do not include beginning or ending wordage like
+        "Sure, here is your step by step instructions"
+        or
+        "Feel free to ask if you need any further adjustments"
+        
         Here is the path:
         {path_text}
         """
